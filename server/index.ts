@@ -8,6 +8,12 @@ import { connectDB } from "./db";
 
 const app = express();
 
+// Trust proxy for production (required for Render, Heroku, etc.)
+// This allows Express to correctly identify secure connections behind reverse proxies
+if (process.env.NODE_ENV === "production") {
+  app.set('trust proxy', 1);
+}
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
