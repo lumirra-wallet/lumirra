@@ -746,13 +746,24 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
       // Generate 4-digit code
       const code = Math.floor(1000 + Math.random() * 9000).toString();
       const hashedCode = emailService.hashOTP(code);
+      
+      console.log(`[Reset Code] Generated code: ${code} for email: ${email.toLowerCase()}`);
+      console.log(`[Reset Code] Hashed code: ${hashedCode.substring(0, 20)}...`);
+
+      // Delete any existing reset codes for this email first
+      const deleteResult = await VerificationCode.deleteMany({ 
+        email: email.toLowerCase(), 
+        purpose: 'reset' 
+      });
+      console.log(`[Reset Code] Deleted ${deleteResult.deletedCount} old codes`);
 
       // Save to database with 10-minute expiration
-      await VerificationCode.create({
+      const savedCode = await VerificationCode.create({
         email: email.toLowerCase(),
         code: hashedCode,
         purpose: 'reset',
       });
+      console.log(`[Reset Code] Saved new code with ID: ${savedCode._id}`);
 
       // Send email
       const sent = await emailService.sendPasswordResetCode(email, code);
@@ -786,11 +797,22 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Find the verification code in database
+      // Find the LATEST verification code in database
       const verificationRecord = await VerificationCode.findOne({ 
         email: email.toLowerCase(), 
         purpose: 'reset' 
-      });
+      }).sort({ createdAt: -1 });
+
+      console.log(`[Verify Code] Looking for code for email: ${email.toLowerCase()}`);
+      console.log(`[Verify Code] User entered code: ${code}`);
+      console.log(`[Verify Code] Found record: ${verificationRecord ? 'YES' : 'NO'}`);
+      
+      if (verificationRecord) {
+        console.log(`[Verify Code] Stored hash: ${verificationRecord.code.substring(0, 20)}...`);
+        const inputHash = emailService.hashOTP(code);
+        console.log(`[Verify Code] Input hash: ${inputHash.substring(0, 20)}...`);
+        console.log(`[Verify Code] Hashes match: ${inputHash === verificationRecord.code}`);
+      }
 
       if (!verificationRecord) {
         return res.status(400).json({ error: "Invalid or expired reset code" });
@@ -829,11 +851,11 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Find the verification code in database
+      // Find the LATEST verification code in database
       const verificationRecord = await VerificationCode.findOne({ 
         email: email.toLowerCase(), 
         purpose: 'reset' 
-      });
+      }).sort({ createdAt: -1 });
 
       if (!verificationRecord) {
         return res.status(400).json({ error: "Invalid or expired reset code" });
@@ -844,8 +866,11 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
         return res.status(400).json({ error: "Invalid reset code" });
       }
 
-      // Delete the verification code after successful validation
-      await VerificationCode.deleteOne({ _id: verificationRecord._id });
+      // Delete ALL verification codes for this email after successful validation
+      await VerificationCode.deleteMany({ 
+        email: email.toLowerCase(), 
+        purpose: 'reset' 
+      });
 
       // Update password to PIN
       user.password = newPin;
