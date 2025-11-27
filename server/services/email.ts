@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import crypto from 'crypto';
+import { Resend } from 'resend';
 
 interface EmailOptions {
   to: string;
@@ -10,11 +11,14 @@ interface EmailOptions {
 
 class EmailService {
   private transporter: Transporter | null = null;
+  private resendClient: Resend | null = null;
   private fromAddress: string = '';
   private fromName: string = 'Lumirra Wallet';
+  private useResend: boolean = false;
 
   constructor() {
     this.initializeTransporter();
+    this.initializeResend();
   }
 
   private initializeTransporter() {
@@ -27,8 +31,7 @@ class EmailService {
     } = process.env;
 
     if (!EMAIL_HOST || !EMAIL_PORT || !EMAIL_USER || !EMAIL_PASSWORD) {
-      console.warn('Email configuration incomplete. Email service disabled.');
-      console.warn('Required: EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD');
+      console.warn('[Email Service] SMTP configuration incomplete.');
       return;
     }
 
@@ -62,27 +65,105 @@ class EmailService {
 
       this.transporter = nodemailer.createTransport(transportConfig);
 
-      console.log('Email service initialized successfully with nodemailer');
-      console.log('SMTP Host:', EMAIL_HOST);
-      console.log('SMTP Port:', EMAIL_PORT);
-      console.log('SMTP User:', EMAIL_USER);
-      console.log('From address:', this.fromAddress);
-      console.log('Secure mode:', transportConfig.secure ? 'SSL/TLS' : 'STARTTLS');
+      console.log('[Email Service] SMTP initialized');
+      console.log('[Email Service] SMTP Host:', EMAIL_HOST);
+      console.log('[Email Service] SMTP Port:', EMAIL_PORT);
+      console.log('[Email Service] From address:', this.fromAddress);
     } catch (error) {
-      console.error('Failed to initialize email service:', error);
+      console.error('[Email Service] Failed to initialize SMTP:', error);
     }
   }
 
-  async sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
-    if (!this.transporter) {
-      console.error('[Email Service] Email service not initialized - missing configuration');
-      console.error('[Email Service] Check EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD environment variables');
+  private async initializeResend() {
+    const { RESEND_API_KEY, EMAIL_FROM } = process.env;
+    
+    if (RESEND_API_KEY) {
+      try {
+        this.resendClient = new Resend(RESEND_API_KEY);
+        this.useResend = true;
+        if (!this.fromAddress && EMAIL_FROM) {
+          this.fromAddress = EMAIL_FROM;
+        }
+        console.log('[Email Service] Resend initialized (primary or fallback)');
+      } catch (error) {
+        console.error('[Email Service] Failed to initialize Resend:', error);
+      }
+    } else {
+      try {
+        const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+        const xReplitToken = process.env.REPL_IDENTITY 
+          ? 'repl ' + process.env.REPL_IDENTITY 
+          : process.env.WEB_REPL_RENEWAL 
+          ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+          : null;
+
+        if (hostname && xReplitToken) {
+          const response = await fetch(
+            'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
+            {
+              headers: {
+                'Accept': 'application/json',
+                'X_REPLIT_TOKEN': xReplitToken
+              }
+            }
+          );
+          const data = await response.json();
+          const connectionSettings = data.items?.[0];
+
+          if (connectionSettings?.settings?.api_key) {
+            this.resendClient = new Resend(connectionSettings.settings.api_key);
+            if (connectionSettings.settings.from_email && !this.fromAddress) {
+              this.fromAddress = connectionSettings.settings.from_email;
+            }
+            console.log('[Email Service] Resend initialized via Replit connector');
+          }
+        }
+      } catch (error) {
+        console.log('[Email Service] Replit Resend connector not available');
+      }
+    }
+
+    if (!this.transporter && !this.resendClient) {
+      console.warn('[Email Service] No email service configured. Set SMTP or RESEND_API_KEY.');
+    }
+  }
+
+  private async sendViaResend({ to, subject, html }: EmailOptions): Promise<boolean> {
+    if (!this.resendClient) {
       return false;
     }
 
     try {
-      console.log('[Email Service] Attempting to send email to:', to);
-      console.log('[Email Service] Subject:', subject);
+      console.log('[Email Service] Sending via Resend to:', to);
+      
+      const { data, error } = await this.resendClient.emails.send({
+        from: `${this.fromName} <${this.fromAddress || 'onboarding@resend.dev'}>`,
+        to: [to],
+        subject,
+        html,
+      });
+
+      if (error) {
+        console.error('[Email Service] Resend error:', error);
+        return false;
+      }
+
+      console.log('[Email Service] Email sent successfully via Resend');
+      console.log('[Email Service] Message ID:', data?.id);
+      return true;
+    } catch (error: any) {
+      console.error('[Email Service] Resend failed:', error.message);
+      return false;
+    }
+  }
+
+  private async sendViaSMTP({ to, subject, html }: EmailOptions): Promise<boolean> {
+    if (!this.transporter) {
+      return false;
+    }
+
+    try {
+      console.log('[Email Service] Sending via SMTP to:', to);
       
       const info = await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromAddress}>`,
@@ -91,23 +172,43 @@ class EmailService {
         html,
       });
 
-      console.log('[Email Service] Email sent successfully to:', to);
+      console.log('[Email Service] Email sent successfully via SMTP');
       console.log('[Email Service] Message ID:', info.messageId);
       return true;
     } catch (error: any) {
-      console.error('[Email Service] Failed to send email to:', to);
-      console.error('[Email Service] Error code:', error.code);
-      console.error('[Email Service] Error message:', error.message);
-      if (error.code === 'ECONNREFUSED') {
-        console.error('[Email Service] Connection refused - SMTP port may be blocked. Try port 2525 for cloud hosting.');
-      } else if (error.code === 'ETIMEDOUT') {
-        console.error('[Email Service] Connection timed out - SMTP port may be blocked by firewall.');
-      } else if (error.code === 'EAUTH') {
-        console.error('[Email Service] Authentication failed - check EMAIL_USER and EMAIL_PASSWORD.');
+      console.error('[Email Service] SMTP failed:', error.code, error.message);
+      if (error.code === 'ESOCKET' || error.code === 'ECONNRESET' || error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+        console.error('[Email Service] SMTP port blocked - will try Resend fallback');
       }
-      console.error('[Email Service] Full error:', error);
       return false;
     }
+  }
+
+  async sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
+    console.log('[Email Service] Attempting to send email to:', to);
+    console.log('[Email Service] Subject:', subject);
+
+    if (this.useResend && this.resendClient) {
+      const result = await this.sendViaResend({ to, subject, html });
+      if (result) return true;
+    }
+
+    if (this.transporter) {
+      const result = await this.sendViaSMTP({ to, subject, html });
+      if (result) return true;
+
+      if (this.resendClient) {
+        console.log('[Email Service] SMTP failed, falling back to Resend...');
+        return await this.sendViaResend({ to, subject, html });
+      }
+    }
+
+    if (this.resendClient) {
+      return await this.sendViaResend({ to, subject, html });
+    }
+
+    console.error('[Email Service] No email service available');
+    return false;
   }
 
   generateOTP(): string {
@@ -488,7 +589,6 @@ class EmailService {
       </html>
     `;
 
-    // Send to admin email if set, otherwise fall back to from address
     const adminEmail = process.env.ADMIN_EMAIL || this.fromAddress;
     
     return this.sendEmail({
@@ -522,25 +622,23 @@ class EmailService {
             <p style="margin: 10px 0 0 0; opacity: 0.9;">Lumirra Wallet</p>
           </div>
           <div class="content">
-            <p>Dear ${name},</p>
-            <p>Thank you for contacting Lumirra Wallet support. We have reviewed your inquiry and here is our response:</p>
+            <p>Hello <strong>${name}</strong>,</p>
+            <p>Our support team has responded to your inquiry:</p>
             
             <div class="message-box">
-              <div class="detail-label">Our Response:</div>
-              <p style="margin: 10px 0 0 0; white-space: pre-wrap;">${replyMessage}</p>
+              <p style="margin: 0; white-space: pre-wrap;">${replyMessage}</p>
             </div>
             
             <div class="original-message">
               <div class="detail-label">Your Original Message:</div>
-              <p style="margin: 10px 0 0 0; white-space: pre-wrap; color: #666;">${originalMessage}</p>
+              <p style="margin: 10px 0 0 0; color: #666; white-space: pre-wrap;">${originalMessage}</p>
             </div>
             
             <p style="margin-top: 30px;">If you have any further questions, please don't hesitate to reach out to us again.</p>
-            <p>Best regards,<br>Lumirra Wallet Support Team</p>
           </div>
           <div class="footer">
             <p>© ${new Date().getFullYear()} Lumirra Wallet. All rights reserved.</p>
-            <p>This email was sent in response to your support inquiry.</p>
+            <p>This is an automated notification. Please do not reply directly to this email.</p>
           </div>
         </div>
       </body>
@@ -549,12 +647,12 @@ class EmailService {
 
     return this.sendEmail({
       to,
-      subject: 'Response to Your Support Inquiry - Lumirra Wallet',
+      subject: 'Response from Lumirra Wallet Support',
       html,
     });
   }
 
-  async sendSupportMessage(to: string, name: string, message: string, subject: string = 'Message from Lumirra Wallet Support'): Promise<boolean> {
+  async sendDirectMessage(to: string, name: string, message: string, subject?: string): Promise<boolean> {
     const html = `
       <!DOCTYPE html>
       <html>
@@ -572,22 +670,20 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Message from Support</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">Lumirra Wallet</p>
+            <h1>Message from Lumirra Wallet</h1>
           </div>
           <div class="content">
-            <p>Dear ${name},</p>
+            <p>Hello <strong>${name}</strong>,</p>
             
             <div class="message-box">
               <p style="margin: 0; white-space: pre-wrap;">${message}</p>
             </div>
             
-            <p style="margin-top: 30px;">If you have any questions or need assistance, please don't hesitate to reach out to our support team.</p>
-            <p>Best regards,<br>Lumirra Wallet Support Team</p>
+            <p style="margin-top: 30px;">If you have any questions, please don't hesitate to contact our support team.</p>
           </div>
           <div class="footer">
             <p>© ${new Date().getFullYear()} Lumirra Wallet. All rights reserved.</p>
-            <p>This is a message from Lumirra Wallet Support.</p>
+            <p>This is an automated notification. Please do not reply directly to this email.</p>
           </div>
         </div>
       </body>
@@ -596,72 +692,7 @@ class EmailService {
 
     return this.sendEmail({
       to,
-      subject,
-      html,
-    });
-  }
-
-  async sendSupportChatFirstMessageAlert(userName: string, userEmail: string, message: string): Promise<boolean> {
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
-          .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #0084ff 0%, #0066cc 100%); color: white; padding: 40px 30px; text-align: center; }
-          .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
-          .content { padding: 40px 30px; }
-          .message-box { background: #f0f7ff; border-left: 4px solid #0084ff; padding: 20px; margin: 20px 0; border-radius: 4px; }
-          .detail-row { margin: 10px 0; }
-          .detail-label { font-weight: 600; color: #666; }
-          .detail-value { color: #333; }
-          .badge { display: inline-block; background: #0084ff; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-          .footer { background: #f8f9fa; padding: 20px 30px; text-align: center; color: #999; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>New Support Chat Message</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">Lumirra Wallet</p>
-          </div>
-          <div class="content">
-            <p><span class="badge">NEW USER</span></p>
-            <p>A new user has started a support chat conversation and is waiting for assistance:</p>
-            
-            <div class="detail-row">
-              <span class="detail-label">User:</span>
-              <span class="detail-value"> ${userName}</span>
-            </div>
-            
-            <div class="detail-row">
-              <span class="detail-label">Email:</span>
-              <span class="detail-value"> ${userEmail}</span>
-            </div>
-            
-            <div class="message-box">
-              <div class="detail-label">First Message:</div>
-              <p style="margin: 10px 0 0 0; white-space: pre-wrap;">${message}</p>
-            </div>
-            
-            <p style="margin-top: 30px; color: #666; font-weight: 600;">Please log in to the admin panel to respond to this support request.</p>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} Lumirra Wallet. All rights reserved.</p>
-            <p>This is an automated notification from your support chat system.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    // Send to admin email if set, otherwise fall back to from address
-    const adminEmail = process.env.ADMIN_EMAIL || this.fromAddress;
-    
-    return this.sendEmail({
-      to: adminEmail,
-      subject: `New Support Chat from ${userName}`,
+      subject: subject || 'Message from Lumirra Wallet Support',
       html,
     });
   }
