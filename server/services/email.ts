@@ -33,23 +33,41 @@ class EmailService {
     }
 
     this.fromAddress = EMAIL_FROM || EMAIL_USER;
+    const port = parseInt(EMAIL_PORT, 10);
 
     try {
-      this.transporter = nodemailer.createTransport({
+      const transportConfig: any = {
         host: EMAIL_HOST,
-        port: parseInt(EMAIL_PORT, 10),
-        secure: parseInt(EMAIL_PORT, 10) === 465,
+        port: port,
         auth: {
           user: EMAIL_USER,
           pass: EMAIL_PASSWORD,
         },
-      });
+      };
+
+      if (port === 465) {
+        transportConfig.secure = true;
+      } else if (port === 587 || port === 2525) {
+        transportConfig.secure = false;
+        transportConfig.requireTLS = true;
+        transportConfig.tls = {
+          minVersion: 'TLSv1.2',
+        };
+      } else {
+        transportConfig.secure = false;
+      }
+
+      transportConfig.connectionTimeout = 30000;
+      transportConfig.greetingTimeout = 30000;
+
+      this.transporter = nodemailer.createTransport(transportConfig);
 
       console.log('Email service initialized successfully with nodemailer');
       console.log('SMTP Host:', EMAIL_HOST);
       console.log('SMTP Port:', EMAIL_PORT);
       console.log('SMTP User:', EMAIL_USER);
       console.log('From address:', this.fromAddress);
+      console.log('Secure mode:', transportConfig.secure ? 'SSL/TLS' : 'STARTTLS');
     } catch (error) {
       console.error('Failed to initialize email service:', error);
     }
@@ -57,11 +75,15 @@ class EmailService {
 
   async sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
     if (!this.transporter) {
-      console.error('Email service not initialized');
+      console.error('[Email Service] Email service not initialized - missing configuration');
+      console.error('[Email Service] Check EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD environment variables');
       return false;
     }
 
     try {
+      console.log('[Email Service] Attempting to send email to:', to);
+      console.log('[Email Service] Subject:', subject);
+      
       const info = await this.transporter.sendMail({
         from: `"${this.fromName}" <${this.fromAddress}>`,
         to,
@@ -69,12 +91,21 @@ class EmailService {
         html,
       });
 
-      console.log('Email sent successfully to:', to);
-      console.log('Message ID:', info.messageId);
+      console.log('[Email Service] Email sent successfully to:', to);
+      console.log('[Email Service] Message ID:', info.messageId);
       return true;
-    } catch (error) {
-      console.error('Failed to send email to:', to);
-      console.error('Error details:', error);
+    } catch (error: any) {
+      console.error('[Email Service] Failed to send email to:', to);
+      console.error('[Email Service] Error code:', error.code);
+      console.error('[Email Service] Error message:', error.message);
+      if (error.code === 'ECONNREFUSED') {
+        console.error('[Email Service] Connection refused - SMTP port may be blocked. Try port 2525 for cloud hosting.');
+      } else if (error.code === 'ETIMEDOUT') {
+        console.error('[Email Service] Connection timed out - SMTP port may be blocked by firewall.');
+      } else if (error.code === 'EAUTH') {
+        console.error('[Email Service] Authentication failed - check EMAIL_USER and EMAIL_PASSWORD.');
+      }
+      console.error('[Email Service] Full error:', error);
       return false;
     }
   }
