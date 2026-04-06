@@ -208,7 +208,7 @@ export default function ChangeSecurityPasswordPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-4 border-b bg-background">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-4 border-b bg-background">
         <div className="flex items-center gap-2">
           <Link href="/settings/security">
             <button 

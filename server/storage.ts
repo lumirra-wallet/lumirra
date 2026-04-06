@@ -16,6 +16,7 @@ import {
   type InsertSwapOrder,
 } from "@shared/schema";
 import { User, Wallet, Chain, Token, Transaction, TransactionFee, UserTransactionFee, SwapOrder } from "./models";
+import { generateAddressForChain } from "./utils/address-generator";
 import { ETHEREUM_TOKENS } from "@shared/ethereum-tokens";
 import { BNB_TOKENS } from "@shared/bnb-tokens";
 import { TRON_TOKENS } from "@shared/tron-tokens";
@@ -28,6 +29,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<UserType | undefined>;
   createUser(userData: any): Promise<UserType>;
   updateUserProfilePhoto(userId: string, photoUrl: string): Promise<UserType | undefined>;
+  updateUserFeeMethod(userId: string, useFixedFee: boolean): Promise<UserType | undefined>;
+  updateUserTheme(userId: string, theme: "light" | "dark"): Promise<UserType | undefined>;
   getAllUsers(): Promise<UserType[]>;
   searchUsers(query: string): Promise<UserType[]>;
 
@@ -50,6 +53,7 @@ export interface IStorage {
   createToken(token: InsertToken): Promise<TokenType>;
   updateTokenBalance(id: string, balance: string): Promise<TokenType | undefined>;
   updateTokenVisibility(id: string, isVisible: boolean): Promise<TokenType | undefined>;
+  updateTokenDisplayOrder(id: string, displayOrder: number): Promise<TokenType | undefined>;
   
   // Transaction operations
   getTransaction(id: string): Promise<TransactionType | undefined>;
@@ -106,10 +110,52 @@ export class MongoStorage implements IStorage {
       await this.initializeTransactionFees();
       await this.clearSwapHistory();
       await this.migrateTokens();
+      await this.backfillUserIds();
       this.initialized = true;
     } catch (error) {
       console.error("Failed to initialize database:", error);
       throw new Error("Database initialization failed");
+    }
+  }
+
+  static generateUserId(): string {
+    // Generate a unique 11-digit numeric string
+    const min = 10000000000;
+    const max = 99999999999;
+    return Math.floor(Math.random() * (max - min + 1) + min).toString();
+  }
+
+  private async backfillUserIds() {
+    try {
+      const usersWithoutId = await User.find({ userId: null });
+      let count = 0;
+      for (const user of usersWithoutId) {
+        const MAX_RETRIES = 5;
+        let assigned = false;
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          const uid = MongoStorage.generateUserId();
+          try {
+            await User.findByIdAndUpdate(user._id, { userId: uid }, { runValidators: true });
+            assigned = true;
+            count++;
+            break;
+          } catch (err: any) {
+            if (err?.code === 11000 && err?.keyPattern?.userId) {
+              console.warn(`[Migration] userId collision during backfill, retrying (attempt ${attempt + 1})`);
+            } else {
+              throw err;
+            }
+          }
+        }
+        if (!assigned) {
+          console.error(`[Migration] Failed to assign userId to user ${user._id} after ${MAX_RETRIES} attempts`);
+        }
+      }
+      if (count > 0) {
+        console.log(`[Migration] Backfilled 11-digit userId for ${count} users`);
+      }
+    } catch (err) {
+      console.error("[Migration] Failed to backfill userIds:", err);
     }
   }
 
@@ -396,17 +442,77 @@ export class MongoStorage implements IStorage {
   }
 
   async createUser(userData: any): Promise<UserType> {
-    const user = await User.create(userData);
-    return {
-      ...user.toObject(),
-      _id: (user._id as any).toString(),
-    } as UserType;
+    // Generate unique virtual addresses for each supported chain
+    if (!userData.virtualAddresses) {
+      userData.virtualAddresses = {
+        ethereum: generateAddressForChain("ethereum"),
+        bnb: generateAddressForChain("bnb"),
+        tron: generateAddressForChain("tron"),
+        solana: generateAddressForChain("solana"),
+      };
+    }
+    // Generate a unique 11-digit numeric userId if not already set
+    if (!userData.userId) {
+      let uid: string;
+      let attempts = 0;
+      do {
+        uid = MongoStorage.generateUserId();
+        attempts++;
+      } while (attempts < 10 && await User.findOne({ userId: uid }));
+      userData.userId = uid!;
+    }
+    // Retry on duplicate-key errors for userId (extremely rare concurrency case)
+    const MAX_RETRIES = 3;
+    let lastError: any;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const user = await User.create(userData);
+        return {
+          ...user.toObject(),
+          _id: (user._id as any).toString(),
+        } as UserType;
+      } catch (err: any) {
+        const isDupKey = err?.code === 11000 && err?.keyPattern?.userId;
+        if (!isDupKey) throw err;
+        // Regenerate userId and retry
+        userData.userId = MongoStorage.generateUserId();
+        lastError = err;
+        console.warn(`[createUser] userId collision, retrying (attempt ${attempt + 1})`);
+      }
+    }
+    throw lastError;
   }
 
   async updateUserProfilePhoto(userId: string, photoUrl: string): Promise<UserType | undefined> {
     const user = await User.findByIdAndUpdate(
       userId,
       { profilePhoto: photoUrl },
+      { new: true }
+    ).lean();
+    if (!user) return undefined;
+    return {
+      ...user,
+      _id: user._id.toString(),
+    } as UserType;
+  }
+
+  async updateUserFeeMethod(userId: string, useFixedFee: boolean): Promise<UserType | undefined> {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { useFixedFee } },
+      { new: true }
+    ).lean();
+    if (!user) return undefined;
+    return {
+      ...user,
+      _id: user._id.toString(),
+    } as UserType;
+  }
+
+  async updateUserTheme(userId: string, theme: "light" | "dark"): Promise<UserType | undefined> {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { theme } },
       { new: true }
     ).lean();
     if (!user) return undefined;
@@ -436,12 +542,14 @@ export class MongoStorage implements IStorage {
 
     const walletUserIds = wallets.map(w => w.userId);
 
-    // Search users by email, name, or user ID, OR if they have a matching wallet
+    // Search users by email, name, 11-digit userId, or MongoDB ObjectId, OR matching wallet
+    const isNumericUserId = /^\d{11}$/.test(query);
     const users = await User.find({
       $or: [
         { email: { $regex: query, $options: 'i' } },
         { firstName: { $regex: query, $options: 'i' } },
         { lastName: { $regex: query, $options: 'i' } },
+        ...(isNumericUserId ? [{ userId: query }] : []),
         ...(mongoose.Types.ObjectId.isValid(query) ? [{ _id: new mongoose.Types.ObjectId(query) }] : []),
         ...(walletUserIds.length > 0 ? [{ _id: { $in: walletUserIds } }] : [])
       ]
@@ -669,6 +777,20 @@ export class MongoStorage implements IStorage {
     const token = await Token.findByIdAndUpdate(
       id,
       { isVisible },
+      { new: true }
+    ).lean();
+    if (!token) return undefined;
+    return {
+      ...token,
+      _id: token._id.toString(),
+      walletId: token.walletId.toString(),
+    } as unknown as TokenType;
+  }
+
+  async updateTokenDisplayOrder(id: string, displayOrder: number): Promise<TokenType | undefined> {
+    const token = await Token.findByIdAndUpdate(
+      id,
+      { displayOrder },
       { new: true }
     ).lean();
     if (!token) return undefined;

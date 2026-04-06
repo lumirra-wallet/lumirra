@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { useWallet } from "@/contexts/wallet-context";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowRight, 
@@ -18,8 +19,8 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "@/components/theme-provider";
 import logoImage from "@assets/Lumirra Logo Design (original)_1761875532047.png";
-import mockupLightImage from "@assets/LIGHT THEME_1763989217041.png";
-import mockupDarkImage from "@assets/DARK THEME (1)_1763989217041.png";
+import mockupLightImage from "@assets/LIGHT_THEME_1775364086941.png";
+import mockupDarkImage from "@assets/DARK_THEME_1775364086943.png";
 
 function getDailyNewUsers() {
   const today = new Date();
@@ -96,8 +97,16 @@ export default function Landing() {
   const { scrollYProgress } = useScroll();
   const heroRef = useRef(null);
   const { theme } = useTheme();
+  const { isAuthenticated, isLoading } = useWallet();
   
   const y = useTransform(scrollYProgress, [0, 0.3], [0, -50]);
+
+  // Redirect logged-in users straight to the dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      setLocation("/dashboard");
+    }
+  }, [isLoading, isAuthenticated, setLocation]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -192,7 +201,7 @@ export default function Landing() {
               </Button>
             </motion.div>
 
-            <div className="relative flex justify-center items-center w-full min-h-[500px] md:min-h-[600px] mt-12">
+            <div className="relative flex justify-center items-center w-full mt-12">
               {/* Rotating chain logos container */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <motion.div
@@ -205,9 +214,11 @@ export default function Landing() {
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full flex items-center justify-center"
                     style={{ 
                       zIndex: 20,
-                      backgroundColor: 'white',
+                      backgroundColor: theme === "dark" ? "hsl(222,85%,9%)" : "white",
                       border: '3px solid #3B82F6',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
+                      boxShadow: theme === "dark"
+                        ? '0 10px 30px rgba(0,0,0,0.5)'
+                        : '0 10px 30px rgba(0,0,0,0.15)'
                     }}
                     animate={{ rotate: -360 }}
                     transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
@@ -224,9 +235,11 @@ export default function Landing() {
                     className="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full flex items-center justify-center"
                     style={{ 
                       zIndex: 5,
-                      backgroundColor: 'white',
+                      backgroundColor: theme === "dark" ? "hsl(222,85%,9%)" : "white",
                       border: '3px solid #EAB308',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
+                      boxShadow: theme === "dark"
+                        ? '0 10px 30px rgba(0,0,0,0.5)'
+                        : '0 10px 30px rgba(0,0,0,0.15)'
                     }}
                     animate={{ rotate: -360 }}
                     transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
@@ -243,9 +256,11 @@ export default function Landing() {
                     className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full flex items-center justify-center"
                     style={{ 
                       zIndex: 5,
-                      backgroundColor: 'white',
+                      backgroundColor: theme === "dark" ? "hsl(222,85%,9%)" : "white",
                       border: '3px solid #EF4444',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
+                      boxShadow: theme === "dark"
+                        ? '0 10px 30px rgba(0,0,0,0.5)'
+                        : '0 10px 30px rgba(0,0,0,0.15)'
                     }}
                     animate={{ rotate: -360 }}
                     transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
@@ -262,9 +277,11 @@ export default function Landing() {
                     className="absolute left-0 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full flex items-center justify-center"
                     style={{ 
                       zIndex: 20,
-                      backgroundColor: 'white',
+                      backgroundColor: theme === "dark" ? "hsl(222,85%,9%)" : "white",
                       border: '3px solid #A855F7',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
+                      boxShadow: theme === "dark"
+                        ? '0 10px 30px rgba(0,0,0,0.5)'
+                        : '0 10px 30px rgba(0,0,0,0.15)'
                     }}
                     animate={{ rotate: -360 }}
                     transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
@@ -278,30 +295,51 @@ export default function Landing() {
                 </motion.div>
               </div>
 
-              {/* Mockup image */}
-              <div className="relative w-full max-w-xl md:max-w-2xl lg:max-w-3xl">
-                <AnimatePresence initial={false}>
-                  <motion.img 
-                    key={theme}
-                    src={theme === "light" ? mockupLightImage : mockupDarkImage} 
-                    alt="Lumirra Wallet Dashboard" 
-                    className="w-full drop-shadow-2xl absolute inset-0"
-                    style={{ zIndex: 10 }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ 
-                      duration: 0.8, 
-                      ease: [0.4, 0, 0.2, 1]
-                    }}
-                    data-testid="img-hero-mockup"
-                  />
-                </AnimatePresence>
-                <img 
-                  src={mockupLightImage} 
-                  alt="" 
-                  className="w-full opacity-0 pointer-events-none"
-                  aria-hidden="true"
+              {/* Mockup image — both images always in DOM so they're pre-loaded.
+                  Switching themes is instant: no fetch, just opacity toggle.
+                  The container uses a fixed aspect ratio so it has the correct
+                  height before the images finish loading (no layout shift). */}
+              <div
+                className="relative w-full max-w-xl md:max-w-2xl lg:max-w-3xl"
+                style={{ zIndex: 10, aspectRatio: "9 / 16" }}
+              >
+                {/* Light mockup */}
+                <img
+                  src={mockupLightImage}
+                  alt="Lumirra Wallet Dashboard"
+                  className="absolute inset-0 w-full h-full object-contain transition-opacity duration-150"
+                  style={{ opacity: theme === "light" ? 1 : 0, pointerEvents: theme === "light" ? "auto" : "none" }}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="sync"
+                  data-testid="img-hero-mockup"
+                />
+                {/* Dark mockup */}
+                <img
+                  src={mockupDarkImage}
+                  alt="Lumirra Wallet Dashboard"
+                  className="absolute inset-0 w-full h-full object-contain transition-opacity duration-150"
+                  style={{ opacity: theme === "dark" ? 1 : 0, pointerEvents: theme === "dark" ? "auto" : "none" }}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="sync"
+                  aria-hidden={theme !== "dark"}
+                />
+
+                {/* Phone shadow — dark for light theme, white glow for dark theme */}
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 pointer-events-none transition-all duration-300"
+                  style={{
+                    bottom: "-2%",
+                    width: "60%",
+                    height: "40px",
+                    borderRadius: "50%",
+                    background: theme === "dark"
+                      ? "radial-gradient(ellipse at center, rgba(255,255,255,0.22) 0%, transparent 75%)"
+                      : "radial-gradient(ellipse at center, rgba(0,0,0,0.28) 0%, transparent 75%)",
+                    filter: "blur(6px)",
+                    zIndex: 9,
+                  }}
                 />
               </div>
             </div>
@@ -615,7 +653,7 @@ export default function Landing() {
 
       <footer className="py-16 px-4 bg-muted/30 border-t">
         <div className="container mx-auto max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-8">
             <div className="flex items-center gap-3">
               <img src={logoImage} alt="Lumirra" className="h-10 w-10" />
               <div>
@@ -625,10 +663,57 @@ export default function Landing() {
                 <span className="text-sm text-muted-foreground">Secure Multi-Chain Wallet</span>
               </div>
             </div>
-            <div className="text-sm text-muted-foreground text-center md:text-right space-y-2">
-              <p>Your keys, your crypto. Always.</p>
-              <p>&copy; 2025 Lumirra. All rights reserved.</p>
+            <div className="flex flex-col sm:flex-row gap-8">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Legal</p>
+                <nav className="flex flex-col gap-1.5">
+                  <button
+                    onClick={() => setLocation("/privacy-policy")}
+                    className="text-sm text-muted-foreground hover:text-[#1677FF] transition-colors text-left"
+                    data-testid="link-footer-privacy"
+                  >
+                    Privacy Policy
+                  </button>
+                  <button
+                    onClick={() => setLocation("/cookie-policy")}
+                    className="text-sm text-muted-foreground hover:text-[#1677FF] transition-colors text-left"
+                    data-testid="link-footer-cookies"
+                  >
+                    Cookie Policy
+                  </button>
+                  <button
+                    onClick={() => setLocation("/terms-of-use")}
+                    className="text-sm text-muted-foreground hover:text-[#1677FF] transition-colors text-left"
+                    data-testid="link-footer-terms"
+                  >
+                    Terms of Use
+                  </button>
+                </nav>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Support</p>
+                <nav className="flex flex-col gap-1.5">
+                  <button
+                    onClick={() => setLocation("/faq")}
+                    className="text-sm text-muted-foreground hover:text-[#1677FF] transition-colors text-left"
+                    data-testid="link-footer-faq"
+                  >
+                    FAQ
+                  </button>
+                  <button
+                    onClick={() => setLocation("/contact")}
+                    className="text-sm text-muted-foreground hover:text-[#1677FF] transition-colors text-left"
+                    data-testid="link-footer-contact"
+                  >
+                    Contact Us
+                  </button>
+                </nav>
+              </div>
             </div>
+          </div>
+          <div className="mt-10 pt-6 border-t border-border/50 text-sm text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-3">
+            <p>Your keys, your crypto. Always.</p>
+            <p>&copy; 2026 Lumirra. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProcessingOverlayProps {
   isProcessing: boolean;
   onComplete: () => void;
+  onSuccess?: () => void;
   message?: string;
   duration?: number;
 }
@@ -12,10 +13,18 @@ interface ProcessingOverlayProps {
 export function ProcessingOverlay({
   isProcessing,
   onComplete,
+  onSuccess,
   message = "Processing transaction...",
   duration = 5000,
 }: ProcessingOverlayProps) {
   const [showSuccess, setShowSuccess] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+  const onSuccessRef = useRef(onSuccess);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onSuccessRef.current = onSuccess;
+  });
 
   useEffect(() => {
     if (!isProcessing) {
@@ -25,10 +34,12 @@ export function ProcessingOverlay({
 
     const successTimer = setTimeout(() => {
       setShowSuccess(true);
+      // Fire onSuccess exactly when the checkmark appears
+      onSuccessRef.current?.();
     }, duration - 1000);
 
     const completeTimer = setTimeout(() => {
-      onComplete();
+      onCompleteRef.current();
       setShowSuccess(false);
     }, duration);
 
@@ -36,7 +47,7 @@ export function ProcessingOverlay({
       clearTimeout(successTimer);
       clearTimeout(completeTimer);
     };
-  }, [isProcessing, duration, onComplete]);
+  }, [isProcessing, duration]);
 
   if (!isProcessing) return null;
 
@@ -47,7 +58,7 @@ export function ProcessingOverlay({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
+      <div className="absolute inset-0 bg-background/40 backdrop-blur-md" />
       
       <div className="relative z-10 flex flex-col items-center gap-4">
         <div className="relative">
@@ -62,11 +73,10 @@ export function ProcessingOverlay({
                 }}
                 transition={{ 
                   duration: 0.6,
-                  ease: [0.34, 1.56, 0.64, 1], // Bouncy easing
+                  ease: [0.34, 1.56, 0.64, 1],
                 }}
                 className="relative"
               >
-                {/* Radial glow effect */}
                 <motion.div
                   className="absolute inset-0 rounded-full bg-success/30 blur-xl"
                   animate={{
@@ -79,32 +89,19 @@ export function ProcessingOverlay({
                     ease: "easeInOut",
                   }}
                 />
-                
-                {/* Success checkmark icon */}
                 <CheckCircle2 className="h-16 w-16 text-success relative z-10" />
-                
-                {/* Sparkle particles */}
                 {[...Array(6)].map((_, i) => (
                   <motion.div
                     key={i}
                     className="absolute top-1/2 left-1/2"
-                    initial={{ 
-                      x: 0, 
-                      y: 0, 
-                      opacity: 0,
-                      scale: 0,
-                    }}
+                    initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
                     animate={{ 
                       x: Math.cos((i * Math.PI * 2) / 6) * 40,
                       y: Math.sin((i * Math.PI * 2) / 6) * 40,
                       opacity: [0, 1, 0],
                       scale: [0, 1, 0],
                     }}
-                    transition={{
-                      duration: 0.8,
-                      delay: 0.1,
-                      ease: "easeOut",
-                    }}
+                    transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
                   >
                     <Sparkles className="h-4 w-4 text-success" />
                   </motion.div>

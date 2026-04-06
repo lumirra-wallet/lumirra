@@ -12,15 +12,23 @@ import {
 import { ArrowLeft, Search, ChevronDown, QrCode, Copy } from "lucide-react";
 import { useWallet } from "@/contexts/wallet-context";
 import { useToast } from "@/hooks/use-toast";
-import { formatAddress } from "@/lib/format-address";
 import { getWalletAddress } from "@shared/wallet-addresses";
 import { useTranslation } from "react-i18next";
+
+// Derive a short display address using the same slice format as transaction-detail.tsx
+function getDisplayAddress(chainId: string, virtualAddresses: Record<string, string> | null): string {
+  // Prefer the user's virtual address for this chain
+  const virtual = virtualAddresses?.[chainId];
+  const addr = virtual || getWalletAddress(chainId);
+  if (!addr) return "";
+  return `${addr.slice(0, 6)}.....${addr.slice(-6)}`;
+}
 
 interface ReceiveTokenProps {
   symbol: string;
   name: string;
   chainName: string;
-  address: string;
+  displayAddress: string;
   icon?: string;
   chainIcon?: string;
   chainId: string;
@@ -33,7 +41,7 @@ function ReceiveToken({
   symbol,
   name,
   chainName,
-  address,
+  displayAddress,
   icon,
   chainIcon,
   chainId,
@@ -87,7 +95,7 @@ function ReceiveToken({
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm text-foreground">{symbol}</p>
           <p className="text-xs text-muted-foreground truncate">{chainName}</p>
-          <p className="text-xs text-muted-foreground truncate">{formatAddress(address)}</p>
+          <p className="text-xs text-muted-foreground font-mono">{displayAddress}</p>
         </div>
       </div>
       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -110,7 +118,7 @@ function ReceiveToken({
 export default function Receive() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
-  const { walletId, isAuthenticated, isLoading } = useWallet();
+  const { walletId, isAuthenticated, isLoading, virtualAddresses } = useWallet();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChain, setSelectedChain] = useState("all");
   const { toast } = useToast();
@@ -241,7 +249,7 @@ export default function Receive() {
             <div className="space-y-1">
               {popularTokens.map((token: any) => {
                 const tokenChain = chains.find((c: any) => c.id === token.chainId);
-                const address = getWalletAddress(token.chainId);
+                const displayAddress = getDisplayAddress(token.chainId, virtualAddresses);
                 
                 return (
                   <ReceiveToken
@@ -249,7 +257,7 @@ export default function Receive() {
                     symbol={token.symbol}
                     name={token.name}
                     chainName={tokenChain?.name || ""}
-                    address={address}
+                    displayAddress={displayAddress}
                     icon={token.icon}
                     chainIcon={tokenChain?.icon}
                     chainId={token.chainId}
@@ -270,7 +278,7 @@ export default function Receive() {
             <div className="space-y-1">
               {allCryptoTokens.map((token: any) => {
                 const tokenChain = chains.find((c: any) => c.id === token.chainId);
-                const address = getWalletAddress(token.chainId);
+                const displayAddress = getDisplayAddress(token.chainId, virtualAddresses);
                 
                 return (
                   <ReceiveToken
@@ -278,7 +286,7 @@ export default function Receive() {
                     symbol={token.symbol}
                     name={token.name}
                     chainName={tokenChain?.name || ""}
-                    address={address}
+                    displayAddress={displayAddress}
                     icon={token.icon}
                     chainIcon={tokenChain?.icon}
                     chainId={token.chainId}

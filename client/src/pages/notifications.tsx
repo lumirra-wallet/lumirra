@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronDown, ArrowUpRight, ArrowDownLeft, Headphones } from "lucide-react";
+import { ArrowLeft, ChevronDown, ArrowUpRight, ArrowDownLeft, Headphones, Bell, BellOff, TrendingUp, TrendingDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useWallet } from "@/contexts/wallet-context";
@@ -46,11 +46,9 @@ export default function Notifications() {
   });
 
   const notifications: Notification[] = notificationsData || [];
-  // Filter out support chat notifications from display (they appear in support chat page instead)
-  const nonSupportChatNotifications = notifications.filter(n => !n.metadata?.supportChat);
-  const filteredNotifications = activeTab === "ALL" 
-    ? nonSupportChatNotifications 
-    : nonSupportChatNotifications.filter(n => n.category === activeTab);
+  const filteredNotifications = activeTab === "ALL"
+    ? notifications
+    : notifications.filter(n => n.category === activeTab);
 
   // Fetch market news
   const { data: newsData, isLoading: isNewsLoading } = useQuery<MarketNews[]>({
@@ -143,6 +141,12 @@ export default function Notifications() {
       return;
     }
 
+    // Navigate to the token detail page for market movement notifications only
+    if (notification.metadata?.marketMovement && notification.metadata?.tokenSymbol) {
+      setLocation(`/token/${notification.metadata.tokenSymbol}`);
+      return;
+    }
+
     // Navigate to swap order details if it's a swap notification with orderId
     if (notification.metadata?.orderId) {
       setLocation(`/swap/orders/${notification.metadata.orderId}`);
@@ -154,6 +158,76 @@ export default function Notifications() {
       setLocation(`/transaction/${notification.transactionId.hash}`);
     }
   };
+
+  // Push notification subscription state
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+
+  // Check push support and current subscription on mount
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      setPushSupported(true);
+      navigator.serviceWorker.register("/sw.js").then(async (reg) => {
+        const sub = await reg.pushManager.getSubscription();
+        setPushSubscribed(!!sub);
+      }).catch(() => {});
+    }
+  }, []);
+
+  const subscribeToPush = useCallback(async () => {
+    setPushLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+      // Fetch VAPID public key
+      const keyRes = await fetch("/api/push/vapid-public-key");
+      const { publicKey } = await keyRes.json();
+      // Subscribe
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+      const subJson = sub.toJSON();
+      await apiRequest("POST", "/api/push/subscribe", {
+        endpoint: subJson.endpoint,
+        keys: subJson.keys,
+      });
+      setPushSubscribed(true);
+      toast({ title: "Push notifications enabled", description: "You'll receive browser notifications for breaking news and market updates." });
+    } catch (e) {
+      toast({ title: "Could not enable push notifications", description: "Please allow notifications in your browser settings.", variant: "destructive" });
+    } finally {
+      setPushLoading(false);
+    }
+  }, [toast]);
+
+  const unsubscribeFromPush = useCallback(async () => {
+    setPushLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await apiRequest("POST", "/api/push/unsubscribe", { endpoint: sub.endpoint });
+          await sub.unsubscribe();
+        }
+      }
+      setPushSubscribed(false);
+      toast({ title: "Push notifications disabled" });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to disable push notifications.", variant: "destructive" });
+    } finally {
+      setPushLoading(false);
+    }
+  }, [toast]);
+
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+  }
 
   const formatTimestamp = (timestamp: string | Date) => {
     const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
@@ -168,7 +242,7 @@ export default function Notifications() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <header className="sticky top-0 bg-background border-b z-10">
+      <header className="sticky top-0 bg-background border-b z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -185,18 +259,32 @@ export default function Notifications() {
                 Notifications
               </h1>
             </div>
-            {filteredNotifications.some(n => !n.isRead) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => markAllAsReadMutation.mutate()}
-                disabled={markAllAsReadMutation.isPending}
-                data-testid="button-read-all"
-                className="text-primary hover:text-primary/80"
-              >
-                {markAllAsReadMutation.isPending ? "Marking..." : "Read All"}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {pushSupported && (
+                <Button
+                  size="icon"
+                  variant={pushSubscribed ? "default" : "ghost"}
+                  onClick={pushSubscribed ? unsubscribeFromPush : subscribeToPush}
+                  disabled={pushLoading}
+                  title={pushSubscribed ? "Disable browser push notifications" : "Enable browser push notifications"}
+                  data-testid="button-push-toggle"
+                >
+                  {pushSubscribed ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                </Button>
+              )}
+              {filteredNotifications.some(n => !n.isRead) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  disabled={markAllAsReadMutation.isPending}
+                  data-testid="button-read-all"
+                  className="text-primary"
+                >
+                  {markAllAsReadMutation.isPending ? "Marking..." : "Read All"}
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Tabs */}
@@ -339,9 +427,23 @@ export default function Notifications() {
                 onClick={() => handleNotificationClick(notification)}
                 data-testid={`notification-${notification._id}`}
               >
-                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-primary">
+                <div
+                  className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                    notification.metadata?.marketMovement
+                      ? notification.metadata.direction === "up"
+                        ? "bg-green-500"
+                        : "bg-red-500"
+                      : "bg-primary"
+                  }`}
+                >
                   {notification.metadata?.supportChat ? (
                     <Headphones className="h-5 w-5 text-white" data-testid={`icon-headphones-${notification._id}`} />
+                  ) : notification.metadata?.marketMovement ? (
+                    notification.metadata.direction === "up" ? (
+                      <TrendingUp className="h-5 w-5 text-white" data-testid={`icon-trending-up-${notification._id}`} />
+                    ) : (
+                      <TrendingDown className="h-5 w-5 text-white" data-testid={`icon-trending-down-${notification._id}`} />
+                    )
                   ) : notification.type === "sent" ? (
                     <ArrowUpRight className="h-5 w-5 text-white" data-testid={`icon-sent-${notification._id}`} />
                   ) : (
@@ -361,6 +463,17 @@ export default function Notifications() {
                   <p className="text-xs sm:text-sm text-muted-foreground mb-2">
                     {notification.description}
                   </p>
+                  {notification.metadata?.supportChat && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="mb-2"
+                      onClick={(e) => { e.stopPropagation(); setLocation("/support-chat"); }}
+                      data-testid={`button-view-message-${notification._id}`}
+                    >
+                      View Message
+                    </Button>
+                  )}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{formatTimestamp(notification.timestamp)}</span>
                     <span>{notification.metadata?.walletAddress || ""}</span>

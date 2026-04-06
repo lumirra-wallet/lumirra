@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -33,10 +38,13 @@
           try { sessionStorage.clear(); } catch (e2) {}
         }
         
-        // Unregister any service workers
+        // Unregister legacy service workers (but keep push notification SW at /sw.js)
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(function(registrations) {
             for(let registration of registrations) {
+              // Preserve the push notification service worker
+              if (registration.scope && registration.scope.indexOf('/sw.js') !== -1) continue;
+              if (registration.active && registration.active.scriptURL && registration.active.scriptURL.endsWith('/sw.js')) continue;
               registration.unregister();
             }
           });
@@ -45,8 +53,8 @@
         console.error('Error clearing caches:', error);
       }
     </script>
-    <script type="module" crossorigin src="/assets/index-BVoBmTYG.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-D6qVyiLe.css">
+    <script type="module" crossorigin src="/assets/index-B_GwxTop.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B1BwHURa.css">
   </head>
   <body>
     <div id="root"></div>

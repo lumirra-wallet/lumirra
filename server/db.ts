@@ -1,20 +1,20 @@
 import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 
-let mongoServer: MongoMemoryServer | null = null;
+let mongoServer: MongoMemoryReplSet | null = null;
 
 export async function connectDB() {
   try {
-    // Use MongoDB Atlas if MONGODB_URI is provided, otherwise use in-memory MongoDB
     let MONGODB_URI = process.env.MONGODB_URI;
-    
+
     if (!MONGODB_URI) {
-      console.log("No MONGODB_URI found, starting in-memory MongoDB server...");
-      mongoServer = await MongoMemoryServer.create();
+      console.log("No MONGODB_URI found, starting in-memory MongoDB replica set (supports transactions)...");
+      mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: "wiredTiger" } });
+      await mongoServer.waitUntilRunning();
       MONGODB_URI = mongoServer.getUri();
-      console.log("In-memory MongoDB server started at:", MONGODB_URI);
+      console.log("In-memory MongoDB replica set started at:", MONGODB_URI);
     }
-    
+
     await mongoose.connect(MONGODB_URI);
     console.log("Connected to MongoDB successfully");
   } catch (error) {

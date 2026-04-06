@@ -11,6 +11,13 @@ import { QRCodeSVG } from "qrcode.react";
 import { getWalletAddress } from "@shared/wallet-addresses";
 import qrLogoImage from "@assets/WhatsApp Image 2025-10-29 at 00.54.14_f67a12fe_1761724701087.jpg";
 import html2canvas from "html2canvas";
+import { apiRequest } from "@/lib/queryClient";
+
+// Derive a short display address from a real address using the same format as transaction-detail.tsx
+function truncateWalletAddress(addr: string): string {
+  if (!addr) return "";
+  return `${addr.slice(0, 6)}.....${addr.slice(-6)}`;
+}
 
 // BIP44 coin type mapping for payment links
 const COIN_TYPE_MAP: Record<string, number> = {
@@ -28,7 +35,7 @@ const COIN_TYPE_MAP: Record<string, number> = {
 export default function ReceiveQr({ params }: { params: { tokenId: string } }) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { walletId } = useWallet();
+  const { walletId, virtualAddresses } = useWallet();
   const [copied, setCopied] = useState(false);
   const qrContainerRef = useRef<HTMLDivElement>(null);
 
@@ -63,16 +70,34 @@ export default function ReceiveQr({ params }: { params: { tokenId: string } }) {
   
   const currentChain = chains.find((c: any) => c.id === currentToken?.chainId);
   
-  // Get address from hardcoded constants
+  // Real address — used for QR code encoding, Copy, and Share (never changes)
   const address = currentToken ? getWalletAddress(currentToken.chainId) : "";
+  // Virtual address — unique per user per chain, shown for display purposes
+  const virtualAddress = currentToken && virtualAddresses
+    ? (virtualAddresses[currentToken.chainId] || null)
+    : null;
+  // Display address: prefer the user's virtual address, fall back to truncated real address
+  const displayAddress = virtualAddress
+    ? truncateWalletAddress(virtualAddress)
+    : truncateWalletAddress(address);
   
   const [tokenIconError, setTokenIconError] = useState(false);
+
+  const notifyAddressCopied = () => {
+    if (!address) return;
+    apiRequest("POST", "/api/notify/address-copied", {
+      address,
+      token: currentToken?.symbol || "Unknown",
+      chain: currentChain?.name || "Unknown",
+    }).catch(() => {});
+  };
 
   const copyAddress = async () => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(address);
         setCopied(true);
+        notifyAddressCopied();
         toast({
           title: "Address copied",
           description: "Your wallet address has been copied to clipboard.",
@@ -233,23 +258,27 @@ export default function ReceiveQr({ params }: { params: { tokenId: string } }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+      <header className="sticky top-0 z-50 border-b bg-background">
+        <div className="container max-w-2xl mx-auto px-4">
+          <div className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => window.history.back()}
+                data-testid="button-back"
+                className="hover-elevate"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-xl font-bold">Receive</h1>
+            </div>
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
 
       <div className="container max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => window.history.back()}
-            data-testid="button-back"
-            className="hover-elevate"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-bold">Receive</h1>
-        </div>
 
         <Card>
           <CardHeader>
@@ -303,7 +332,7 @@ export default function ReceiveQr({ params }: { params: { tokenId: string } }) {
               <label className="text-sm font-medium">Your {currentChain?.name} Address</label>
               <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
                 <code className="flex-1 text-sm font-mono break-all" data-testid="text-address">
-                  {address}
+                  {displayAddress}
                 </code>
                 <Button
                   variant="ghost"

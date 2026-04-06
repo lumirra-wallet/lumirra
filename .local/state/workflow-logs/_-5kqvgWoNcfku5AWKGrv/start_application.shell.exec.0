@@ -1,0 +1,33 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠙[1G[0K[Email Service] SMTP configuration incomplete.
+(node:115) [MONGOOSE] Warning: Duplicate schema index on {"userId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+No MONGODB_URI found, starting in-memory MongoDB replica set (supports transactions)...
+[Email Service] No email service configured. Set SMTP or RESEND_API_KEY.
+In-memory MongoDB replica set started at: mongodb://127.0.0.1:33111/?replicaSet=testset
+Connected to MongoDB successfully
+ADMIN_EMAIL and ADMIN_PASSWORD environment variables not set. Admin user will not be created.
+Transaction fees initialized successfully
+Cleared 0 swap history entries
+[Migration] Set default displayOrder for 13 token types (0 tokens updated)
+[Migration] Hidden 0 non-default tokens
+[Background Job] Starting background jobs...
+[Background Job] Background jobs started successfully
+WebSocket service initialized
+WebSocket service initialized for real-time support chat
+4:17:57 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[Background Job] Fetching crypto news...
+[Background Job] CryptoPanic API error: Not Found
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+[Background Job] Checking market movements...
+[Background Job] Error checking market movements: Error: COINGECKO_API_KEY is not configured
+    at getSimplePrices [90m(/home/runner/workspace/[39mserver/services/coingecko.ts:59:11[90m)[39m
+    at checkMarketMovements [90m(/home/runner/workspace/[39mserver/services/background-jobs.ts:258:26[90m)[39m
+    at Timeout._onTimeout [90m(/home/runner/workspace/[39mserver/services/background-jobs.ts:441:13[90m)[39m
+[90m    at listOnTimeout (node:internal/timers:581:17)[39m
+[90m    at process.processTimers (node:internal/timers:519:7)[39m

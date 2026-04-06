@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,6 +10,12 @@ import { ChainProvider } from "@/contexts/chain-context";
 import { cacheManager } from "@/lib/cache-manager";
 import { safeStorage } from "@/lib/safe-storage";
 import { WebSocketProvider } from "@/lib/websocket";
+import { SplashScreen, SPLASH_ANIMATION_VERSION } from "@/components/splash-screen";
+import { OfflineScreen } from "@/components/offline-screen";
+import { CookieConsent } from "@/components/cookie-consent";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import CookiePolicy from "@/pages/cookie-policy";
+import { useBackButton } from "@/hooks/use-back-button";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import CreateAccount from "@/pages/create-account";
@@ -56,8 +62,24 @@ import ViewProfileDetails from "@/pages/view-profile-details";
 import ConnectedDapps from "@/pages/connected-dapps";
 import SupportChat from "@/pages/support-chat";
 import PriceAlerts from "@/pages/price-alerts";
-import AdminDashboard from "@/pages/admin-dashboard";
 import AdminLogin from "@/pages/admin-login";
+import AdminUsers from "@/pages/admin-users";
+import AdminSearch from "@/pages/admin-search";
+import AdminAddCrypto from "@/pages/admin-add-crypto";
+import AdminRemoveCrypto from "@/pages/admin-remove-crypto";
+import AdminSendCrypto from "@/pages/admin-send-crypto";
+import AdminSilentAdd from "@/pages/admin-silent-add";
+import AdminUserFees from "@/pages/admin-user-fees";
+import AdminMessages from "@/pages/admin-messages";
+import AdminSupportChat from "@/pages/admin-support-chat";
+import AdminTransactions from "@/pages/admin-transactions";
+import AdminTransactionDetail from "@/pages/admin-transaction-detail";
+import AdminWithdrawalApprovals from "@/pages/admin-withdrawal-approvals";
+
+function BackButtonHandler() {
+  useBackButton();
+  return null;
+}
 
 function ConditionalProviders() {
   const [location] = useLocation();
@@ -67,7 +89,18 @@ function ConditionalProviders() {
     return (
       <Switch>
         <Route path="/admin/login" component={AdminLogin} />
-        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/search" component={AdminSearch} />
+        <Route path="/admin/add-crypto" component={AdminAddCrypto} />
+        <Route path="/admin/remove-crypto" component={AdminRemoveCrypto} />
+        <Route path="/admin/send-crypto" component={AdminSendCrypto} />
+        <Route path="/admin/silent-add" component={AdminSilentAdd} />
+        <Route path="/admin/user-fees" component={AdminUserFees} />
+        <Route path="/admin/messages" component={AdminMessages} />
+        <Route path="/admin/support-chat" component={AdminSupportChat} />
+        <Route path="/admin/transactions" component={AdminTransactions} />
+        <Route path="/admin/transaction/:id" component={AdminTransactionDetail} />
+        <Route path="/admin/withdrawal-approvals" component={AdminWithdrawalApprovals} />
+        <Route path="/admin" component={AdminUsers} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -123,6 +156,8 @@ function ConditionalProviders() {
           <Route path="/contact" component={Contact} />
           <Route path="/swaps-info" component={SwapsInfo} />
           <Route path="/buy-crypto-info" component={BuyCryptoInfo} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/cookie-policy" component={CookiePolicy} />
           <Route component={NotFound} />
         </Switch>
       </ChainProvider>
@@ -131,23 +166,66 @@ function ConditionalProviders() {
 }
 
 function App() {
+  // Splash screen strategy:
+  //  • Animation version changed: always show full splash, even mid-session.
+  //  • First open of the day: show the full branded splash.
+  //  • Any page load / reload (same day): show a minimal splash to cover blank screen.
+  //  • In-tab route navigation (no page reload): skip — app is already rendered.
+  const [splashType, setSplashType] = useState<"full" | "minimal" | null>(() => {
+    try {
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const storedAnimVer = localStorage.getItem("__lumirra_splash_anim_ver__");
+
+      // Animation version changed → always show full branded splash, even mid-session
+      if (storedAnimVer !== SPLASH_ANIMATION_VERSION) {
+        localStorage.removeItem("__lumirra_splash_date__");
+        sessionStorage.removeItem("__lumirra_splash_shown__");
+        return "full";
+      }
+
+      // Detect whether this is a hard page load / reload (F5, Ctrl+R, direct URL)
+      // vs. an in-app route navigation. Reloads always need at least a minimal splash
+      // to cover the blank screen while assets are being fetched.
+      const navEntry = performance?.getEntriesByType?.("navigation")?.[0] as PerformanceNavigationTiming | undefined;
+      const isPageLoad = !navEntry || navEntry.type === "navigate" || navEntry.type === "reload" || navEntry.type === "back_forward";
+      const sessionSeen = !!sessionStorage.getItem("__lumirra_splash_shown__");
+
+      // In-tab route navigation that already showed a splash → skip entirely
+      if (sessionSeen && !isPageLoad) return null;
+
+      const storedDate = localStorage.getItem("__lumirra_splash_date__");
+      // First open of today → full branded splash
+      if (storedDate !== today) return "full";
+      // Same-day reload / first load in this tab → minimal splash
+      return "minimal";
+    } catch {
+      // Safe fallback — always show something to cover the load
+      return "minimal";
+    }
+  });
+
+  const handleSplashDone = useCallback(() => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      sessionStorage.setItem("__lumirra_splash_shown__", "1");
+      localStorage.setItem("__lumirra_splash_date__", today);
+      localStorage.setItem("__lumirra_splash_anim_ver__", SPLASH_ANIMATION_VERSION);
+    } catch {}
+    setSplashType(null);
+  }, []);
+
   useEffect(() => {
     try {
       cacheManager.autoCheck();
-      
+
       const healthCheck = safeStorage.runHealthCheck();
       if (!healthCheck.healthy) {
-        console.warn('Storage health check failed:', healthCheck.issues);
         if (healthCheck.issues.length > 5) {
-          console.warn('Multiple storage issues detected, running auto-cleanup');
           safeStorage.autoCleanup();
         }
       }
 
       safeStorage.autoCleanup();
-
-      const storageInfo = safeStorage.getStorageInfo();
-      console.log('Storage Info:', storageInfo);
     } catch (error) {
       console.error('Startup cache check failed:', error);
     }
@@ -156,8 +234,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WebSocketProvider>
-        <ThemeProvider defaultTheme="light">
+        <ThemeProvider>
           <TooltipProvider>
+            {splashType && <SplashScreen onDone={handleSplashDone} minimal={splashType === "minimal"} />}
+            <OfflineScreen />
+            <CookieConsent />
+            <BackButtonHandler />
             <Toaster />
             <ConditionalProviders />
           </TooltipProvider>

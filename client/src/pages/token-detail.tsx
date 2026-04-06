@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -148,9 +147,9 @@ export default function TokenDetail() {
       );
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background glass-bg pb-36">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="glass-header fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <Button
@@ -173,7 +172,7 @@ export default function TokenDetail() {
         </div>
       </header>
 
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 max-w-2xl">
+      <div className="container mx-auto px-3 sm:px-4 pt-16 pb-3 sm:pb-4 max-w-2xl">
         {/* Price Section */}
         <div className="text-center mb-4">
           {token.icon && (
@@ -221,8 +220,7 @@ export default function TokenDetail() {
         </div>
 
         {/* Chart */}
-        <Card className="mb-4">
-          <CardContent className="p-3 sm:p-4">
+        <div className="mb-4 p-3 sm:p-4 rounded-2xl" style={{ background: 'transparent' }}>
             {/* Time Period Toggles */}
             <div className="flex items-center justify-between mb-3 gap-1">
               {TIME_PERIODS.map((period) => (
@@ -255,8 +253,7 @@ export default function TokenDetail() {
                 height={300}
               />
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Tabs - Trust Wallet Style */}
         <Tabs defaultValue="holdings" className="mb-6">
@@ -376,7 +373,7 @@ export default function TokenDetail() {
                   {/* Contract Security */}
                   <div>
                     <h3 className="text-base font-semibold mb-3">{t('tokenDetail.contractSecurity')}</h3>
-                    <div className="bg-card border rounded-lg p-4">
+                    <div className="rounded-2xl p-4 border border-border/60 bg-background/40 backdrop-blur-sm">
                       <div className="flex items-start gap-2 mb-2">
                         <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
                         <div>
@@ -392,7 +389,7 @@ export default function TokenDetail() {
                   {/* Honeypot Risk */}
                   <div>
                     <h3 className="text-base font-semibold mb-3">{t('tokenDetail.honeypotRisk')}</h3>
-                    <div className="bg-card border rounded-lg p-4">
+                    <div className="rounded-2xl p-4 border border-border/60 bg-background/40 backdrop-blur-sm">
                       <div className="flex items-start gap-2 mb-2">
                         <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
                         <div>
@@ -409,7 +406,7 @@ export default function TokenDetail() {
                   {tokenInfo && (
                     <div>
                       <h3 className="text-base font-semibold mb-3">{t('tokenDetail.stats')}</h3>
-                      <div className="bg-card border rounded-lg divide-y">
+                      <div className="rounded-2xl border border-border/60 bg-background/40 backdrop-blur-sm divide-y divide-border/60">
                         {tokenInfo.marketCap && (
                           <div className="flex items-center justify-between p-4">
                             <span className="text-sm text-muted-foreground">{t('tokenDetail.marketCap')}</span>
@@ -496,65 +493,70 @@ export default function TokenDetail() {
 
       </div>
 
-      {/* Fixed Bottom Action Panel */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
-        <div className="container mx-auto px-3 sm:px-4 py-3">
-          <div className="grid grid-cols-5 gap-3 max-w-2xl mx-auto">
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                size="icon"
-                className="h-14 w-14 rounded-2xl bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-muted/80 transition-all duration-200"
-                onClick={() => setLocation(`/send/${token._id || token.id}`)}
-                data-testid="button-send"
-              >
-                <ArrowUpRight className="h-5 w-5 text-black" />
-              </Button>
-              <span className="text-xs font-medium text-foreground">{t('common.send')}</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                size="icon"
-                className="h-14 w-14 rounded-2xl bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-muted/80 transition-all duration-200"
-                onClick={() => setLocation(`/receive-qr/${token._id || token.id}`)}
-                data-testid="button-receive"
-              >
-                <ArrowDownLeft className="h-5 w-5 text-black" />
-              </Button>
-              <span className="text-xs font-medium text-foreground">{t('common.receive')}</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                size="icon"
-                className="h-14 w-14 rounded-2xl bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-muted/80 transition-all duration-200"
-                onClick={() => setLocation(`/swap?from=${symbol}&chainId=${token.chainId}`)}
-                data-testid="button-swap"
-              >
-                <Repeat2 className="h-5 w-5 text-black" />
-              </Button>
-              <span className="text-xs font-medium text-foreground">{t('common.swap')}</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                size="icon"
-                className="h-14 w-14 rounded-2xl bg-[#00D9A3] hover:bg-[#00D9A3]/90 text-black transition-all duration-200"
-                onClick={() => setLocation(`/buy-sell?token=${symbol}`)}
-                data-testid="button-buy"
-              >
-                <ShoppingCart className="h-5 w-5" />
-              </Button>
-              <span className="text-xs font-medium text-foreground">{t('common.buy')}</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                size="icon"
-                className="h-14 w-14 rounded-2xl bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-muted/80 transition-all duration-200 text-black"
-                onClick={() => setLocation(`/buy-sell?token=${symbol}&mode=sell`)}
-                data-testid="button-sell"
-              >
-                <Landmark className="h-5 w-5 text-black" />
-              </Button>
-              <span className="text-xs font-medium text-foreground">{t('common.sell')}</span>
-            </div>
+      {/* Floating Glass Bottom Action Panel */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: "16px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "calc(100% - 32px)",
+          maxWidth: "460px",
+          zIndex: 40,
+        }}
+      >
+        <div className="glass-nav px-3 py-3">
+          <div className="flex items-center justify-around">
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => setLocation(`/send/${token._id || token.id}`)}
+              data-testid="button-send"
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center glass-action-icon">
+                <ArrowUpRight className="h-5 w-5 text-foreground" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">{t('common.send')}</span>
+            </button>
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => setLocation(`/receive-qr/${token._id || token.id}`)}
+              data-testid="button-receive"
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center glass-action-icon">
+                <ArrowDownLeft className="h-5 w-5 text-foreground" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">{t('common.receive')}</span>
+            </button>
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => setLocation(`/swap?from=${symbol}&chainId=${token.chainId}`)}
+              data-testid="button-swap"
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center glass-action-icon">
+                <Repeat2 className="h-5 w-5 text-foreground" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">{t('common.swap')}</span>
+            </button>
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => setLocation(`/buy-sell?token=${symbol}`)}
+              data-testid="button-buy"
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center glass-action-icon-buy">
+                <ShoppingCart className="h-5 w-5 text-emerald-400" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">{t('common.buy')}</span>
+            </button>
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => setLocation(`/buy-sell?token=${symbol}&mode=sell`)}
+              data-testid="button-sell"
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center glass-action-icon">
+                <Landmark className="h-5 w-5 text-foreground" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">{t('common.sell')}</span>
+            </button>
           </div>
         </div>
       </div>

@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { safeStorage } from "@/lib/safe-storage";
 import i18n from "@/i18n";
+import { useTheme } from "@/components/theme-provider";
 
 interface WalletContextType {
   walletId: string | null;
   walletAddress: string | null;
+  virtualAddresses: Record<string, string> | null;
   setWallet: (id: string, address: string) => void;
   clearWallet: () => void;
   isAuthenticated: boolean;
@@ -16,7 +18,9 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [walletId, setWalletId] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [virtualAddresses, setVirtualAddresses] = useState<Record<string, string> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { setThemeFromDB } = useTheme();
 
   useEffect(() => {
     // Verify authentication with backend
@@ -29,6 +33,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         if (response.ok) {
           const userData = await response.json();
           
+          // Sync theme from database.
+          // Only apply if:
+          //   (a) the server returned an explicitly stored theme (not null), AND
+          //   (b) the user has no existing local preference stored in localStorage.
+          // This preserves pre-existing localStorage preferences (migration safety)
+          // while still restoring the DB-stored preference on first login from a new device.
+          if (userData.theme === "light" || userData.theme === "dark") {
+            const localTheme = safeStorage.getItem("theme");
+            if (!localTheme) {
+              setThemeFromDB(userData.theme);
+              safeStorage.setItem("theme", userData.theme);
+            }
+          }
+
           // Apply user preferences from database
           if (userData.language) {
             const currentLanguage = i18n.language || 'en';
@@ -53,6 +71,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             }
           }
           
+          // Always sync virtual addresses from server (null if not present)
+          setVirtualAddresses(userData.virtualAddresses || null);
+
           // If backend returns wallet data, use it
           if (userData.wallet) {
             const walletIdFromApi = userData.wallet.id || userData.wallet._id;
@@ -78,6 +99,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           // Authentication failed - clear everything including preferences
           setWalletId(null);
           setWalletAddress(null);
+          setVirtualAddresses(null);
           safeStorage.removeItem("wallet-id");
           safeStorage.removeItem("wallet-address");
           safeStorage.removeItem("language");
@@ -114,8 +136,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const clearWallet = () => {
     setWalletId(null);
     setWalletAddress(null);
+    setVirtualAddresses(null);
     safeStorage.removeItem("wallet-id");
     safeStorage.removeItem("wallet-address");
+    // Clear persisted theme so the next user on this device starts fresh
+    // (prevents cross-account theme carryover on shared devices)
+    safeStorage.removeItem("theme");
   };
 
   return (
@@ -123,6 +149,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       value={{
         walletId,
         walletAddress,
+        virtualAddresses,
         setWallet,
         clearWallet,
         isAuthenticated: walletId !== null,

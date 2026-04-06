@@ -78,7 +78,7 @@ export default function TransactionDetail() {
 
   const truncateAddress = (address: string) => {
     if (!address) return "";
-    return `${address.substring(0, 10)}...${address.substring(address.length - 7)}`;
+    return `${address.slice(0, 6)}.....${address.slice(-6)}`;
   };
 
   return (
@@ -137,7 +137,9 @@ export default function TransactionDetail() {
                 <div className="flex items-center justify-between p-4">
                   <span className="text-muted-foreground">{isReceive ? t('transaction.sender') : t('transaction.recipient')}</span>
                   <span className="font-medium text-sm" data-testid="text-address">
-                    {truncateAddress(isReceive ? transaction.from : transaction.to || transaction.from)}
+                    {isReceive
+                      ? truncateAddress(transaction.fromVirtual || transaction.from)
+                      : truncateAddress(transaction.toVirtual || transaction.to || transaction.from)}
                   </span>
                 </div>
               )}
@@ -151,7 +153,7 @@ export default function TransactionDetail() {
               <div className="flex items-center justify-between p-4">
                 <span className="text-muted-foreground">{t('transaction.networkFee')}</span>
                 <span className="font-medium" data-testid="text-network-fee">
-                  {transaction.networkFee || "0.00000423"} {nativeToken}
+                  {transaction.networkFee || transaction.gasUsed || "0"} {nativeToken}
                 </span>
               </div>
             </div>

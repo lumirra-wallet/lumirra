@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Search, Plus, ArrowUp, GripVertical } from "lucide-react";
+import { ArrowLeft, Search, Plus, ArrowUp } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useWallet } from "@/contexts/wallet-context";
@@ -23,21 +23,13 @@ export default function ManageCoins() {
     }
   }, [isLoading, isAuthenticated, setLocation]);
 
-  // Fetch ALL tokens (including hidden ones) for manage-coins page
   const { data: allTokensData } = useQuery({
     queryKey: ["/api/wallet", walletId, "all-tokens"],
     enabled: !!walletId,
   });
 
-  // Fetch available chains for chain badges
   const { data: chainsData } = useQuery({
     queryKey: ["/api/chains"],
-  });
-
-  // Fetch real-time prices for sorting by market cap
-  const { data: pricesData } = useQuery({
-    queryKey: ["/api/prices"],
-    enabled: !!walletId,
   });
 
   const chains = (chainsData as any) || [];
@@ -50,31 +42,21 @@ export default function ManageCoins() {
     token.contractAddress?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Sort tokens by market cap (popularity) - most popular tokens first
+  // Sort: visible tokens first (by displayOrder ascending), hidden tokens after
   const filteredTokens = [...searchFilteredTokens].sort((a: any, b: any) => {
-    const aCoingeckoId = a.coingeckoId || a.symbol.toLowerCase();
-    const bCoingeckoId = b.coingeckoId || b.symbol.toLowerCase();
-    const aMarketCap = (pricesData as any)?.[aCoingeckoId]?.usd_market_cap || 0;
-    const bMarketCap = (pricesData as any)?.[bCoingeckoId]?.usd_market_cap || 0;
-    return bMarketCap - aMarketCap; // Highest market cap first
-  });
-
-  const removeTokenMutation = useMutation({
-    mutationFn: async (tokenSymbol: string) => {
-      const response = await fetch(`/api/wallet/${walletId}/tokens/${tokenSymbol}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to remove token");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId, "all-tokens"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId, "portfolio"] });
-      toast({
-        title: "Token removed",
-        description: "Token has been removed from your wallet",
-      });
-    },
+    const aVisible = a.isVisible !== false;
+    const bVisible = b.isVisible !== false;
+    if (aVisible && !bVisible) return -1;
+    if (!aVisible && bVisible) return 1;
+    // Both visible: sort by displayOrder
+    if (aVisible && bVisible) {
+      const aOrder = a.displayOrder ?? 999;
+      const bOrder = b.displayOrder ?? 999;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.name.localeCompare(b.name);
+    }
+    // Both hidden: alphabetical
+    return a.name.localeCompare(b.name);
   });
 
   const toggleVisibilityMutation = useMutation({
@@ -82,9 +64,7 @@ export default function ManageCoins() {
       const response = await fetch(`/api/wallet/${walletId}/tokens/${tokenId}/visibility`, {
         method: "PATCH",
         body: JSON.stringify({ isVisible }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
       if (!response.ok) throw new Error("Failed to update token visibility");
       return response.json();
@@ -92,12 +72,40 @@ export default function ManageCoins() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId, "all-tokens"] });
       queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId, "portfolio"] });
-      toast({
-        title: "Token visibility updated",
-        description: "Your changes have been saved",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId] });
     },
   });
+
+  const moveToTopMutation = useMutation({
+    mutationFn: async ({ tokenId, displayOrder }: { tokenId: string; displayOrder: number }) => {
+      const response = await apiRequest(
+        "PATCH",
+        `/api/wallet/${walletId}/tokens/${tokenId}/order`,
+        { displayOrder }
+      );
+      if (!response.ok) throw new Error("Failed to update token order");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId, "all-tokens"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId, "portfolio"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId] });
+      toast({ title: "Token pinned to top", description: "This token will appear first in your wallet." });
+    },
+    onError: () => {
+      toast({ variant: "destructive", title: "Failed", description: "Could not update token order." });
+    },
+  });
+
+  const handleMoveToTop = (token: any) => {
+    // Find the minimum displayOrder among all currently visible tokens (excluding this one)
+    const visibleOrders = filteredTokens
+      .filter((t: any) => t.id !== token.id && t.isVisible !== false)
+      .map((t: any) => t.displayOrder ?? 999);
+    const minOrder = visibleOrders.length > 0 ? Math.min(...visibleOrders) : 1;
+    const newOrder = minOrder - 1;
+    moveToTopMutation.mutate({ tokenId: token.id, displayOrder: newOrder });
+  };
 
   if (!isAuthenticated || !walletId) {
     return null;
@@ -150,104 +158,103 @@ export default function ManageCoins() {
 
         {/* Token List */}
         <div className="space-y-2">
-          {filteredTokens.map((token: any) => (
-            <Card
-              key={token.id}
-              className="p-3 hover-elevate cursor-pointer"
-              data-testid={`card-token-${token.symbol.toLowerCase()}-${token.chainId}`}
-              onClick={() => setLocation(`/token/${token.symbol.toLowerCase()}/${token.chainId}`)}
-            >
-              <div className="flex items-center gap-3">
-                {/* Token Icon with Chain Badge */}
-                <div className="relative w-10 h-10 flex-shrink-0">
-                  <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden bg-white/10">
-                    {token.icon && !imageErrors[`token-${token.id}`] ? (
-                      <img 
-                        src={token.icon} 
-                        alt={token.name} 
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={() => {
-                          setImageErrors(prev => ({ ...prev, [`token-${token.id}`]: true }));
-                        }}
-                      />
-                    ) : (
-                      <span className="text-primary font-bold text-sm">{token.symbol[0]}</span>
-                    )}
-                  </div>
-                  {/* Chain Badge */}
-                  {(() => {
-                    const chain = chains.find((c: any) => c.id === token.chainId);
-                    const isNativeToken = token.symbol === chain?.symbol;
-                    return chain?.icon && !isNativeToken ? (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center overflow-hidden">
-                        {!imageErrors[`chain-${chain.id}`] ? (
-                          <img 
-                            src={chain.icon} 
-                            alt="" 
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                            onError={() => {
-                              setImageErrors(prev => ({ ...prev, [`chain-${chain.id}`]: true }));
-                            }}
-                          />
-                        ) : (
-                          <span className="text-[8px] font-medium">{token.symbol[0]}</span>
-                        )}
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-
-                {/* Token Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium">
-                    {token.symbol}
+          {filteredTokens.map((token: any) => {
+            const isVisible = token.isVisible !== false;
+            return (
+              <Card
+                key={token.id}
+                className="p-3 hover-elevate cursor-pointer"
+                data-testid={`card-token-${token.symbol.toLowerCase()}-${token.chainId}`}
+                onClick={() => setLocation(`/token/${token.symbol.toLowerCase()}/${token.chainId}`)}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Token Icon with Chain Badge */}
+                  <div className="relative w-10 h-10 flex-shrink-0">
+                    <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden bg-white/10">
+                      {token.icon && !imageErrors[`token-${token.id}`] ? (
+                        <img
+                          src={token.icon}
+                          alt={token.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={() => {
+                            setImageErrors(prev => ({ ...prev, [`token-${token.id}`]: true }));
+                          }}
+                        />
+                      ) : (
+                        <span className="text-primary font-bold text-sm">{token.symbol[0]}</span>
+                      )}
+                    </div>
+                    {/* Chain Badge */}
                     {(() => {
                       const chain = chains.find((c: any) => c.id === token.chainId);
-                      return chain?.symbol ? (
-                        <span className="text-sm text-muted-foreground ml-1.5">
-                          ({chain.symbol})
-                        </span>
+                      const isNativeToken = token.symbol === chain?.symbol;
+                      return chain?.icon && !isNativeToken ? (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center overflow-hidden">
+                          {!imageErrors[`chain-${chain.id}`] ? (
+                            <img
+                              src={chain.icon}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={() => {
+                                setImageErrors(prev => ({ ...prev, [`chain-${chain.id}`]: true }));
+                              }}
+                            />
+                          ) : (
+                            <span className="text-[8px] font-medium">{token.symbol[0]}</span>
+                          )}
+                        </div>
                       ) : null;
                     })()}
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">
-                    {token.name}
+
+                  {/* Token Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">
+                      {token.symbol}
+                      {(() => {
+                        const chain = chains.find((c: any) => c.id === token.chainId);
+                        return chain?.symbol ? (
+                          <span className="text-sm text-muted-foreground ml-1.5">
+                            ({chain.symbol})
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+                    <div className="text-sm text-muted-foreground truncate">
+                      {token.name}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    {/* Move-to-top arrow — only shown for enabled (visible) tokens */}
+                    {isVisible && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover-elevate"
+                        onClick={() => handleMoveToTop(token)}
+                        disabled={moveToTopMutation.isPending}
+                        title="Move to top"
+                        data-testid={`button-pin-${token.symbol.toLowerCase()}-${token.chainId}`}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Switch
+                      checked={isVisible}
+                      onCheckedChange={(checked) => {
+                        toggleVisibilityMutation.mutate({ tokenId: token.id, isVisible: checked });
+                      }}
+                      data-testid={`switch-${token.symbol.toLowerCase()}-${token.chainId}`}
+                    />
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover-elevate"
-                    onClick={() => setLocation(`/send-list/${token.walletId}`)}
-                    data-testid={`button-pin-${token.symbol.toLowerCase()}-${token.chainId}`}
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover-elevate"
-                    onClick={() => setLocation(`/receive-qr/${token.id}`)}
-                    data-testid={`button-qr-${token.symbol.toLowerCase()}-${token.chainId}`}
-                  >
-                    <GripVertical className="h-4 w-4" />
-                  </Button>
-                  <Switch
-                    checked={token.isVisible !== false}
-                    onCheckedChange={(checked) => {
-                      toggleVisibilityMutation.mutate({ tokenId: token.id, isVisible: checked });
-                    }}
-                    data-testid={`switch-${token.symbol.toLowerCase()}-${token.chainId}`}
-                  />
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
 
         {filteredTokens.length === 0 && (

@@ -1,18 +1,140 @@
+/* Liquid Glass Effect */
+@import './styles/liquid-glass.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Liquid Glass Effect */
-@import './styles/liquid-glass.css';
+@layer base {
+  /* ── Android/iOS WebView: disable ALL browser-level overscroll / refresh ── */
+  html {
+    /* Block ALL overscroll directions: covers vertical pull-to-refresh AND
+       horizontal back-navigation swipe on Android Chrome / WebView */
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+    /* Prevent iOS elastic bounce on the root viewport */
+    height: 100%;
+    width: 100%;
+    /* Prevent text selection on UI chrome — feels native */
+    -webkit-user-select: none;
+    user-select: none;
+  }
 
-/* Disable browser's native pull-to-refresh on mobile */
+  body {
+    /* Belt-and-suspenders: repeat on body in case browser applies only to html */
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+    /* Use dynamic viewport height for proper fullscreen on mobile */
+    height: 100%;
+    width: 100%;
+    /* Prevent Chrome Android pull-to-refresh gesture via touch-action.
+       pan-x pan-y = allow scrolling but NOT the "pull down" refresh trigger.
+       JS touchstart/touchmove handlers in main.tsx add an additional layer. */
+    touch-action: pan-x pan-y;
+    /* iOS: prevent the elastic body bounce */
+    -webkit-overflow-scrolling: auto;
+  }
+
+  /* Allow text selection inside content areas where it makes sense */
+  p, span, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, pre, code {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  #root {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    width: 100%;
+    overflow-x: hidden;
+    /* Support iOS safe area insets (notch, home bar) */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    box-sizing: border-box;
+  }
+
+  /* Ensure min-h-screen uses dvh for accurate mobile fullscreen */
+  .min-h-screen {
+    min-height: 100dvh !important;
+    min-height: -webkit-fill-available !important;
+  }
+
+  /* Fix touch targets for mobile — no double-tap zoom, fast response */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Scrollable containers: allow scrolling but contain overscroll within
+     the element (prevents the parent / chrome from receiving the gesture) */
+  [data-scroll], .overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Global gradient mesh for the liquid glass background */
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% -10%, rgba(22, 119, 255, 0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 110%, rgba(46, 216, 255, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 50%, rgba(130, 100, 255, 0.05) 0%, transparent 70%);
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% -10%, rgba(22, 119, 255, 0.16) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 110%, rgba(46, 216, 255, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 50%, rgba(130, 100, 255, 0.09) 0%, transparent 70%);
+    background-attachment: fixed;
+  }
+}
+
+/* ── Hide scrollbars globally — scrolling still works ───────────────── */
+/* Must live OUTSIDE @layer so ::-webkit-scrollbar pseudo-elements fire  */
+
+/* Firefox */
+* {
+  scrollbar-width: none !important;
+}
+
+/* Legacy Edge / IE */
+* {
+  -ms-overflow-style: none !important;
+}
+
+/* Chrome, Edge (Chromium), Safari */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Explicitly target the scroll roots */
 html,
 body {
-  overscroll-behavior-y: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overflow: -moz-scrollbars-none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* LIGHT MODE */
 :root {
+  /* Glass design system tokens */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
 
@@ -23,39 +145,44 @@ body {
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 220 100% 99%;
+  /* Glass-complementary background — very slightly cool-blue tint instead of pure neutral */
+  --background: 218 60% 97%;
 
   --foreground: 215 100% 9%;
 
-  --border: 220 25% 88%;
+  /* Slightly cooler border for crisp glass edge contrast */
+  --border: 218 30% 86%;
 
-  --card: 0 0% 100%;
+  /* Cards: very subtle blue-white to complement frosted glass surfaces */
+  --card: 215 50% 99%;
 
   --card-foreground: 215 100% 9%;
 
-  --card-border: 220 20% 92%;
+  --card-border: 218 25% 91%;
 
-  --sidebar: 220 50% 94%;
+  /* Sidebar: cooler saturation to pair with glass nav */
+  --sidebar: 218 55% 93%;
 
   --sidebar-foreground: 215 100% 9%;
 
-  --sidebar-border: 220 40% 89%;
+  --sidebar-border: 218 40% 88%;
 
   --sidebar-primary: 214 100% 54%;
 
   --sidebar-primary-foreground: 220 100% 98%;
 
-  --sidebar-accent: 220 30% 90%;
+  --sidebar-accent: 218 35% 89%;
 
   --sidebar-accent-foreground: 214 100% 25%;
 
   --sidebar-ring: 214 100% 54%;
 
-  --popover: 0 0% 100%;
+  /* Popovers: same subtle blue-white as card */
+  --popover: 215 50% 99%;
 
   --popover-foreground: 215 100% 9%;
 
-  --popover-border: 220 20% 92%;
+  --popover-border: 218 25% 91%;
 
   --primary: 214 100% 54%;
 
@@ -140,6 +267,11 @@ body {
 }
 
 .dark {
+  /* Glass design system tokens (dark) */
+  --glass-bg: rgba(12, 22, 48, 0.60);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
 
@@ -149,39 +281,44 @@ body {
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 215 100% 6%;
+  /* Glass-complementary deep background — richer blue depth to show glass layers */
+  --background: 222 85% 6%;
 
   --foreground: 220 60% 92%;
 
-  --border: 215 35% 15%;
+  /* Crisp blue-toned borders that frame glass surfaces */
+  --border: 220 40% 14%;
 
-  --card: 215 45% 10%;
+  /* Cards: slightly elevated blue-dark surface for glass-on-glass depth */
+  --card: 220 55% 10%;
 
   --card-foreground: 220 60% 92%;
 
-  --card-border: 215 40% 13%;
+  --card-border: 220 45% 13%;
 
-  --sidebar: 215 45% 10%;
+  /* Sidebar: matching card depth for a cohesive glass shell */
+  --sidebar: 220 55% 10%;
 
   --sidebar-foreground: 220 60% 92%;
 
-  --sidebar-border: 215 35% 13%;
+  --sidebar-border: 220 40% 13%;
 
   --sidebar-primary: 214 100% 54%;
 
   --sidebar-primary-foreground: 220 100% 98%;
 
-  --sidebar-accent: 215 30% 14%;
+  --sidebar-accent: 220 35% 14%;
 
   --sidebar-accent-foreground: 220 80% 85%;
 
   --sidebar-ring: 214 100% 54%;
 
-  --popover: 215 40% 12%;
+  /* Popovers: slightly lighter than card for lift effect */
+  --popover: 220 50% 12%;
 
   --popover-foreground: 220 60% 92%;
 
-  --popover-border: 215 35% 15%;
+  --popover-border: 220 40% 15%;
 
   --primary: 214 100% 54%;
 

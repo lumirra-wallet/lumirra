@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronRight, Copy, Check } from "lucide-react";
+import { ArrowLeft, ChevronRight, Copy, Check, Hash } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { DefaultAvatar } from "@/components/default-avatar";
@@ -20,6 +20,7 @@ export default function Profile() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: isAuthLoading } = useWallet();
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [copiedUserId, setCopiedUserId] = useState(false);
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -41,11 +42,18 @@ export default function Profile() {
     if (wallet?.address) {
       navigator.clipboard.writeText(wallet.address);
       setCopiedAddress(true);
-      toast({
-        title: "Copied!",
-        description: "Wallet address copied to clipboard",
-      });
+      toast({ title: "Copied!", description: "Wallet address copied to clipboard" });
       setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  };
+
+  const handleCopyUserId = () => {
+    const uid = (user as User)?.userId;
+    if (uid) {
+      navigator.clipboard.writeText(uid);
+      setCopiedUserId(true);
+      toast({ title: "Copied!", description: "Your user ID has been copied to clipboard" });
+      setTimeout(() => setCopiedUserId(false), 2000);
     }
   };
 
@@ -114,6 +122,38 @@ export default function Profile() {
             </p>
           </div>
         </div>
+
+        {/* User ID Card */}
+        {(user as User)?.userId && (
+          <Card className="mb-3">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                    <Hash className="h-3 w-3" />
+                    User ID
+                  </p>
+                  <p className="text-sm font-mono tracking-widest" data-testid="text-user-id">
+                    {(user as User).userId}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-2 flex-shrink-0 transition-all duration-200"
+                  onClick={handleCopyUserId}
+                  data-testid="button-copy-user-id"
+                >
+                  {copiedUserId ? (
+                    <Check className="h-4 w-4 text-green-500 animate-in zoom-in-50 duration-200" />
+                  ) : (
+                    <Copy className="h-4 w-4 transition-transform hover:scale-110" />
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Wallet ID Card */}
         {wallets && wallets.length > 0 && (

@@ -18,7 +18,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ArrowUpRight, ArrowDownLeft, Repeat2, Settings, Plus, Eye, EyeOff, Clock, Search, ChevronDown, MoreVertical, Coins, ArrowUp, Bell, ScanLine, ChevronUp, ChevronDown as ChevronDownIcon, Headphones } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ArrowUpRight, ArrowDownLeft, Repeat2, Settings, Plus, Eye, EyeOff, Clock, Search, ChevronDown, MoreVertical, Coins, ArrowUp, Bell, ScanLine, ChevronUp, ChevronDown as ChevronDownIcon, Headphones, BellRing } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "@/contexts/wallet-context";
@@ -28,6 +35,7 @@ import { formatCurrency, convertCurrency, getCurrencySymbol } from "@/lib/curren
 import { BottomNav } from "@/components/bottom-nav";
 import { queryClient } from "@/lib/queryClient";
 import { useTranslation } from "react-i18next";
+import { playNotificationSound, consumePendingDashboardSound } from "@/lib/sound";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -42,6 +50,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [clickedTokenId, setClickedTokenId] = useState<string | null>(null);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   
   // Get selected fiat currency from localStorage
   const selectedCurrency = localStorage.getItem("fiatCurrency") || "USD";
@@ -58,6 +67,90 @@ export default function Dashboard() {
       setLocation("/");
     }
   }, [isLoading, isAuthenticated, setLocation]);
+
+  // Show in-app notification permission prompt on every dashboard visit if not yet granted
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (typeof window === "undefined") return;
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    // Only show the custom prompt when permission hasn't been granted yet
+    if (Notification.permission === "granted") {
+      // Already granted — silently ensure subscription is active
+      const timer = setTimeout(async () => {
+        try {
+          const reg = await navigator.serviceWorker.register("/sw.js");
+          await navigator.serviceWorker.ready;
+          const existing = await reg.pushManager.getSubscription();
+          if (!existing) {
+            const keyRes = await fetch("/api/push/vapid-public-key");
+            const { publicKey } = await keyRes.json();
+            const padding = "=".repeat((4 - (publicKey.length % 4)) % 4);
+            const base64 = (publicKey + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = atob(base64);
+            const applicationServerKey = Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+            const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+            const subJson = sub.toJSON();
+            await fetch("/api/push/subscribe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+            });
+          }
+        } catch {}
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+    // Show the custom in-app prompt so the user can consciously accept
+    if (Notification.permission === "default") {
+      const timer = setTimeout(() => {
+        setShowNotificationPrompt(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  // Helper: request native permission and subscribe to push
+  const requestNotificationPermission = async () => {
+    setShowNotificationPrompt(false);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        const reg = await navigator.serviceWorker.register("/sw.js");
+        await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        if (!existing) {
+          const keyRes = await fetch("/api/push/vapid-public-key");
+          const { publicKey } = await keyRes.json();
+          const padding = "=".repeat((4 - (publicKey.length % 4)) % 4);
+          const base64 = (publicKey + padding).replace(/-/g, "+").replace(/_/g, "/");
+          const rawData = atob(base64);
+          const applicationServerKey = Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+          const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+          const subJson = sub.toJSON();
+          await fetch("/api/push/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+          });
+        }
+      }
+    } catch {}
+  };
+
+  // Play pending success sound when returning to dashboard after a transfer
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const timer = setTimeout(() => {
+      if (consumePendingDashboardSound()) {
+        playNotificationSound();
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   useEffect(() => {
     localStorage.setItem('balanceVisible', JSON.stringify(balanceVisible));
@@ -229,9 +322,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background glass-bg">
       {/* Header - Fixed/Non-scrollable */}
-      <header className="border-b bg-card/50 backdrop-blur-sm flex-shrink-0 z-50">
+      <header className="glass-header flex-shrink-0 z-50 sticky top-0">
         <div className="container mx-auto px-3 sm:px-4 py-1.5 sm:py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -292,7 +385,7 @@ export default function Dashboard() {
         </div>
       </header>
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto pb-20">
+      <div className="flex-1 overflow-y-auto pb-28">
         {/* Pull-to-refresh indicator */}
         <div 
           className="flex items-center justify-center transition-opacity"
@@ -336,8 +429,9 @@ export default function Dashboard() {
         >
         {/* Portfolio value */}
         <div className="mb-3 sm:mb-4">
-          <Card className="bg-gradient-to-br from-primary to-accent border-0 shadow-lg">
-            <CardContent className="p-3 sm:p-4">
+          <Card className="bg-gradient-to-br from-primary to-accent border-0 shadow-xl overflow-hidden relative">
+            <div className="glass-shine-diagonal z-10" />
+            <CardContent className="p-3 sm:p-4 relative z-20">
               <div className="mb-3">
                 <div className="flex items-center justify-end gap-2 mb-1.5">
                   <Button
@@ -663,6 +757,39 @@ export default function Dashboard() {
         open={addTokenDialogOpen}
         onOpenChange={setAddTokenDialogOpen}
       />
+
+      {/* Notification Permission Dialog — always shows until user accepts or dismisses */}
+      <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
+        <DialogContent className="max-w-sm mx-auto" data-testid="dialog-notification-prompt">
+          <DialogHeader className="items-center text-center gap-3 pt-2">
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-primary/10">
+              <BellRing className="h-7 w-7 text-primary" />
+            </div>
+            <DialogTitle className="text-lg font-semibold">Enable Notifications</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground text-center">
+              Stay updated on your transactions, transfers, and account activity. Allow notifications so you never miss an update.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2 pb-1">
+            <Button
+              className="w-full"
+              onClick={requestNotificationPermission}
+              data-testid="button-allow-notifications"
+            >
+              Allow Notifications
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground"
+              onClick={() => setShowNotificationPrompt(false)}
+              data-testid="button-dismiss-notifications"
+            >
+              Not Now
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <BottomNav />
     </div>
   );

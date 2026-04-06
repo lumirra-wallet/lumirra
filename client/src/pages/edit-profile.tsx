@@ -162,7 +162,7 @@ export default function EditProfile() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="border-b border-border">
+      <div className="border-b border-border sticky top-0 z-50 bg-background">
         <div className="container max-w-2xl mx-auto px-4">
           <div className="flex items-center justify-between py-4">
             <Button

@@ -1,0 +1,189 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K[Email Service] SMTP initialized
+[Email Service] SMTP Host: smtp.hostinger.com
+[Email Service] SMTP Port: 465
+[Email Service] From address: Support@lumirrawallet.com
+[Email Service] Resend initialized (primary or fallback)
+(node:2180) [MONGOOSE] Warning: Duplicate schema index on {"userId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Connected to MongoDB successfully
+Admin password updated successfully
+Cleared 0 swap history entries
+[Migration] Set default displayOrder for 13 token types (0 tokens updated)
+[Migration] Hidden 0 non-default tokens
+[Background Job] Starting background jobs...
+[Background Job] Background jobs started successfully
+WebSocket service initialized
+WebSocket service initialized for real-time support chat
+4:46:08 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[Background Job] Fetching crypto news...
+[Background Job] CryptoPanic API error: Not Found
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+[Background Job] Checking market movements...
+[CoinGecko] Fetching prices for 8 coins from: https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,solana,tron,dogecoin,cardano,ripple&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 8 coins
+[Background Job] Market movement check complete — 0 coin(s) notified
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+4:50:38 PM [express] GET /api/user 200 in 13ms
+4:50:38 PM [express] GET /api/auth/user 401 in 1ms :: {"error":"Authentication required"}
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+4:52:34 PM [express] GET /api/user 200 in 7ms
+4:52:34 PM [express] GET /api/auth/user 401 in 0ms :: {"error":"Authentication required"}
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+4:56:29 PM [express] GET /api/user 200 in 5ms
+4:56:30 PM [express] GET /api/auth/user 401 in 0ms :: {"error":"Authentication required"}
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+4:59:03 PM [express] GET /api/user 200 in 6ms
+4:59:04 PM [express] GET /api/auth/user 401 in 0ms :: {"error":"Authentication required"}
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+4:59:21 PM [express] PATCH /api/user/theme 401 in 0ms :: {"error":"Authentication required"}
+5:00:49 PM [express] GET /api/user 200 in 6ms
+5:00:49 PM [express] GET /api/auth/user 401 in 0ms :: {"error":"Authentication required"}
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+5:01:00 PM [express] POST /api/auth/login-pin 200 in 366ms :: {"user":{"id":"69091f115705fd76771fbb5…
+5:01:02 PM [express] GET /api/chains 200 in 137ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[Portfolio API] Wallet 69091f115705fd76771fbb5e: Found 8 visible tokens out of 66 total
+5:01:02 PM [express] GET /api/wallet/69091f115705fd76771fbb5e/portfolio 200 in 409ms :: {"tokens":[{…
+[Background Job] Fetching crypto news...
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+[Background Job] CryptoPanic API error: Not Found
+5:02:20 PM [express] GET /api/user 200 in 6ms
+5:02:20 PM [express] GET /api/chains 200 in 138ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+5:02:20 PM [express] GET /api/auth/user 200 in 275ms :: {"_id":"69091f115705fd76771fbb5c","userId":"…
+5:02:21 PM [express] GET /api/chains 304 in 137ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+5:02:21 PM [express] GET /api/notifications/unread-count 200 in 140ms :: {"count":0}
+[Portfolio API] Wallet 69091f115705fd76771fbb5e: Found 8 visible tokens out of 66 total
+5:02:21 PM [express] GET /api/wallet/69091f115705fd76771fbb5e/portfolio 200 in 408ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+5:02:22 PM [express] GET /api/prices 200 in 187ms :: {"0x":{"usd":0.104885,"usd_market_cap":88957830…
+WebSocket upgrade request received for /ws
+WebSocket connected: userId=69091f115705fd76771fbb5c, role=user
+5:02:22 PM [express] GET /api/auth/user 304 in 273ms :: {"_id":"69091f115705fd76771fbb5c","userId":"…
+5:02:22 PM [express] GET /api/support-chat/unread-count 200 in 971ms :: {"unreadCount":0}
+5:02:23 PM [express] GET /api/notifications/unread-count 304 in 137ms :: {"count":0}
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+5:02:28 PM [express] GET /api/prices 304 in 136ms :: {"0x":{"usd":0.104885,"usd_market_cap":88957830…
+5:02:28 PM [express] GET /api/auth/user 304 in 272ms :: {"_id":"69091f115705fd76771fbb5c","userId":"…
+[Portfolio API] Wallet 69091f115705fd76771fbb5e: Found 8 visible tokens out of 66 total
+5:02:28 PM [express] GET /api/wallet/69091f115705fd76771fbb5e/portfolio 304 in 411ms :: {"tokens":[{…
+5:02:29 PM [express] GET /api/news 200 in 713ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly9kZWNy","…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+5:03:13 PM [express] GET /api/prices 304 in 42ms :: {"0x":{"usd":0.104885,"usd_market_cap":88957830.…
+5:03:14 PM [express] GET /api/news/aHR0cHM6Ly9jb2lu 200 in 750ms :: {"id":"aHR0cHM6Ly9jb2lu","title"…
+5:03:20 PM [express] PATCH /api/user/theme 200 in 147ms :: {"theme":"light","message":"Theme prefere…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+5:03:21 PM [express] GET /api/prices 304 in 120ms :: {"0x":{"usd":0.104885,"usd_market_cap":88957830…
+5:03:21 PM [express] GET /api/auth/user 200 in 271ms :: {"_id":"69091f115705fd76771fbb5c","userId":"…
+[Portfolio API] Wallet 69091f115705fd76771fbb5e: Found 8 visible tokens out of 66 total
+5:03:21 PM [express] GET /api/wallet/69091f115705fd76771fbb5e/portfolio 304 in 410ms :: {"tokens":[{…
+5:03:21 PM [express] GET /api/news 304 in 602ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly9kZWNy","…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+5:03:23 PM [express] GET /api/prices 200 in 136ms :: {"0x":{"usd":0.10492,"usd_market_cap":89010559.…
+5:03:23 PM [express] GET /api/news/aHR0cHM6Ly9kZWNy 200 in 158ms :: {"id":"aHR0cHM6Ly9kZWNy","title"…
+5:03:27 PM [express] PATCH /api/user/theme 200 in 140ms :: {"theme":"dark","message":"Theme preferen…
+5:03:27 PM [express] PATCH /api/user/theme 200 in 140ms :: {"theme":"light","message":"Theme prefere…
+5:03:28 PM [express] PATCH /api/user/theme 200 in 139ms :: {"theme":"dark","message":"Theme preferen…
+5:03:28 PM [express] PATCH /api/user/theme 200 in 144ms :: {"theme":"light","message":"Theme prefere…
+Error fetching CryptoSlate: Error: Status code 403
+    at ClientRequest.<anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4mrss-parser[24m/lib/parser.js:88:25[90m)[39m
+[90m    at Object.onceWrapper (node:events:639:26)[39m
+[90m    at ClientRequest.emit (node:events:524:28)[39m
+[90m    at HTTPParser.parserOnIncomingClient [as onIncoming] (node:_http_client:702:27)[39m
+[90m    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)[39m
+[90m    at TLSSocket.socketOnData (node:_http_client:544:22)[39m
+[90m    at TLSSocket.emit (node:events:524:28)[39m
+[90m    at addChunk (node:internal/streams/readable:561:12)[39m
+[90m    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)[39m
+[90m    at Readable.push (node:internal/streams/readable:392:5)[39m
+[90m    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)[39m
+5:03:29 PM [express] GET /api/news 200 in 174ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly9kZWNy","…
+5:03:29 PM [express] GET /api/auth/user 304 in 272ms :: {"_id":"69091f115705fd76771fbb5c","userId":"…
+[Portfolio API] Wallet 69091f115705fd76771fbb5e: Found 8 visible tokens out of 66 total
+5:03:29 PM [express] GET /api/wallet/69091f115705fd76771fbb5e/portfolio 304 in 410ms :: {"tokens":[{…
+5:03:31 PM [express] GET /api/news/aHR0cHM6Ly9jb2lu 304 in 137ms :: {"id":"aHR0cHM6Ly9jb2lu","title"…
+Error fetching CryptoSlate: Error: Status code 403
+    at ClientRequest.<anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4mrss-parser[24m/lib/parser.js:88:25[90m)[39m
+[90m    at Object.onceWrapper (node:events:639:26)[39m
+[90m    at ClientRequest.emit (node:events:524:28)[39m
+[90m    at HTTPParser.parserOnIncomingClient [as onIncoming] (node:_http_client:702:27)[39m
+[90m    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)[39m
+[90m    at TLSSocket.socketOnData (node:_http_client:544:22)[39m
+[90m    at TLSSocket.emit (node:events:524:28)[39m
+[90m    at addChunk (node:internal/streams/readable:561:12)[39m
+[90m    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)[39m
+[90m    at Readable.push (node:internal/streams/readable:392:5)[39m
+[90m    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)[39m
+5:03:33 PM [express] GET /api/news 304 in 129ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly9kZWNy","…
+5:03:33 PM [express] GET /api/auth/user 304 in 272ms :: {"_id":"69091f115705fd76771fbb5c","userId":"…
+[Portfolio API] Wallet 69091f115705fd76771fbb5e: Found 8 visible tokens out of 66 total
+5:03:33 PM [express] GET /api/wallet/69091f115705fd76771fbb5e/portfolio 304 in 408ms :: {"tokens":[{…
+5:03:34 PM [express] GET /api/news/aHR0cHM6Ly93d3cu 200 in 194ms :: {"id":"aHR0cHM6Ly93d3cu","title"…
+5:03:36 PM [express] PATCH /api/user/theme 200 in 142ms :: {"theme":"dark","message":"Theme preferen…
+WebSocket disconnected: userId=69091f115705fd76771fbb5c
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check

@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProcessingOverlay } from "@/components/processing-overlay";
-import { ArrowUpDown, ChevronDown, ChevronUp, X, Search, Info, Clock, Wallet, MoreVertical, Repeat, Fuel, ArrowRightLeft, Building2, Zap, ArrowLeft } from "lucide-react";
+import { primeAudio, playSuccessSound, setSoundSuppressed, scheduleDashboardSound } from "@/lib/sound";
+import { ArrowUpDown, ChevronDown, ChevronUp, X, Search, Info, Clock, Wallet, MoreVertical, Repeat, Fuel, ArrowRightLeft, Building2, Zap, ArrowLeft, ChevronRight } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Dialog,
@@ -23,6 +24,27 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
+
+// CoinGecko ID mapping for native chain tokens (same as send page)
+const CHAIN_COINGECKO_IDS: Record<string, string> = {
+  ethereum: "ethereum",
+  bnb: "binancecoin",
+  tron: "tron",
+  solana: "solana",
+};
+
+// 5% dynamic fee calculator (same as send page)
+function calculateTransferFee(
+  transferUsd: number,
+  nativeTokenPriceUsd: number
+): { feeUsd: number; feeInNativeToken: number } {
+  if (transferUsd <= 0 || nativeTokenPriceUsd <= 0) {
+    return { feeUsd: 0, feeInNativeToken: 0 };
+  }
+  const feeUsd = parseFloat((transferUsd * 0.05).toFixed(8));
+  const feeInNativeToken = parseFloat((feeUsd / nativeTokenPriceUsd).toFixed(8));
+  return { feeUsd, feeInNativeToken };
+}
 
 // Providers data with real logos
 const PROVIDERS = {
@@ -316,6 +338,7 @@ export default function Swap() {
     },
     onSuccess: (data) => {
       setShowConfirmDialog(false);
+      setSoundSuppressed(true); // Suppress WS sound while the animation plays
       setIsProcessing(true);
       queryClient.invalidateQueries({ queryKey: ["/api/wallet", walletId] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
@@ -328,6 +351,7 @@ export default function Swap() {
     },
     onError: (error: Error) => {
       setShowConfirmDialog(false);
+      setSoundSuppressed(false);
       setPendingSuccessMessage(null);
       toast({
         variant: "destructive",
@@ -345,20 +369,49 @@ export default function Swap() {
         description: pendingSuccessMessage,
       });
       setPendingSuccessMessage(null);
-      // Navigate to swap order details page
+      // Schedule a notification sound to play when the user lands on the dashboard
+      scheduleDashboardSound();
       const orderId = sessionStorage.getItem('pendingSwapOrderId');
       if (orderId) {
         sessionStorage.removeItem('pendingSwapOrderId');
         setTimeout(() => {
+          setSoundSuppressed(false); // Release suppression just before navigating
           setLocation(`/swap/orders/${orderId}`);
         }, 1000);
       } else {
         setTimeout(() => {
+          setSoundSuppressed(false); // Release suppression just before navigating
           setLocation("/dashboard");
         }, 1000);
       }
+    } else {
+      setSoundSuppressed(false);
     }
   };
+
+  // --- Fee calculation (same logic as send page) ---
+  const nativeChainCoingeckoId = payToken?.chainId ? CHAIN_COINGECKO_IDS[payToken.chainId] : null;
+  const nativeTokenPriceUsd = nativeChainCoingeckoId
+    ? ((pricesData as any)?.[nativeChainCoingeckoId]?.usd || 0)
+    : 0;
+  const payAmountUsd = (parseFloat(payAmount) || 0) * (payToken?.usd_price || 0);
+  const isDynamic = (feeData as any)?.dynamic === true;
+  let effectiveFeeToken = 0;
+  let effectiveFeeUsd = 0;
+  if (isDynamic) {
+    const calc = calculateTransferFee(payAmountUsd, nativeTokenPriceUsd);
+    effectiveFeeToken = calc.feeInNativeToken;
+    effectiveFeeUsd = calc.feeUsd;
+  } else if ((feeData as any)?.feeAmount) {
+    effectiveFeeToken = parseFloat((feeData as any).feeAmount);
+    effectiveFeeUsd = effectiveFeeToken * nativeTokenPriceUsd;
+  }
+  const nativeSymbol = currentNativeToken?.symbol || currentChain?.symbol || "";
+  const gasBalanceAmt = currentNativeToken
+    ? parseFloat(currentNativeToken.balance.replace(/,/g, ""))
+    : 0;
+  const hasInsufficientGas = effectiveFeeToken > 0 && gasBalanceAmt < effectiveFeeToken;
+  const canSendCrypto = user?.canSendCrypto ?? false;
 
   const handleSwap = () => {
     if (!payToken || !payAmount || parseFloat(payAmount) <= 0) return;
@@ -375,43 +428,14 @@ export default function Swap() {
       return;
     }
 
-    // Check if user has permission to swap crypto
-    const canSendCrypto = user?.canSendCrypto ?? false;
-    if (!canSendCrypto) {
-      console.log("🚫 User does not have permission to swap crypto");
-      setShowInsufficientGasDialog(true);
-      toast({
-        variant: "destructive",
-        title: "Insufficient fee",
-        description: "You need to have sufficient fee to complete this transaction.",
-      });
-      return;
-    }
-
-    // Check if user has enough balance for gas
-    const chain = chains.find((c: any) => c.id === payToken.chainId);
-    if (!chain) return;
-
-    // Find native token for this chain to check gas balance
-    const nativeToken = allTokens.find(
-      (t: any) => t.chainId === chain.id && t.symbol === chain.symbol
-    );
-
-    // Get actual gas requirement from fee data
-    const gasRequired = parseFloat(feeData?.feeAmount || "0.001");
-    const gasBalance = nativeToken ? parseFloat(nativeToken.balance.replace(/,/g, "")) : 0;
-
-    // Show insufficient gas dialog if balance is too low
-    if (gasBalance < gasRequired) {
-      setShowInsufficientGasDialog(true);
-    } else {
-      // Show confirmation dialog
-      setShowConfirmDialog(true);
-    }
+    // Always show confirmation dialog — warnings (gas / permission) shown inline
+    setShowConfirmDialog(true);
   };
 
   // Actually execute the swap (called from confirmation dialog)
   const confirmSwap = () => {
+    if (hasInsufficientGas || !canSendCrypto) return;
+    primeAudio();
     setShowConfirmDialog(false);
     swapMutation.mutate();
   };
@@ -428,9 +452,9 @@ export default function Swap() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background glass-bg pb-28">
       {/* Header */}
-      <div className="border-b border-border">
+      <div className="glass-header sticky top-0 z-50">
         <div className="container max-w-2xl mx-auto px-4">
           <div className="flex items-center justify-between py-4">
             <Button
@@ -461,7 +485,7 @@ export default function Swap() {
 
       <div className="container max-w-2xl mx-auto px-4 py-6">
         {/* Pay Section */}
-        <Card className="p-4 mb-4">
+        <div className="glass-card p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-muted-foreground">Pay</span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -516,7 +540,7 @@ export default function Swap() {
               data-testid="input-pay-amount"
             />
           </div>
-        </Card>
+        </div>
 
         {/* Swap Direction Button */}
         <div className="flex justify-center -my-2 relative z-10">
@@ -532,7 +556,7 @@ export default function Swap() {
         </div>
 
         {/* Receive Section */}
-        <Card className="p-4 mb-4">
+        <div className="glass-card p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-muted-foreground">Receive</span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -568,7 +592,7 @@ export default function Swap() {
               {receiveAmount === "0" ? "0.0" : receiveAmount}
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Swap Button */}
         <Button
@@ -582,7 +606,7 @@ export default function Swap() {
         </Button>
 
         {/* Provider Section */}
-        <Card className="p-4 mb-4">
+        <div className="glass-card p-4 mb-4">
           <div
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setProviderExpanded(!providerExpanded)}
@@ -661,10 +685,10 @@ export default function Swap() {
               </Button>
             </div>
           )}
-        </Card>
+        </div>
 
         {/* Info Message */}
-        <div className="flex items-start gap-2 text-xs text-muted-foreground bg-card border border-border rounded-lg p-3">
+        <div className="flex items-start gap-2 text-xs text-muted-foreground glass-card p-3">
           <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
           <p>
             Due to exchange rate fluctuations, there may be a slight difference between the amount
@@ -767,84 +791,106 @@ export default function Swap() {
         gasBalance={currentNativeToken ? parseFloat(currentNativeToken.balance.replace(/,/g, "")) : 0}
       />
 
-      {/* Swap Confirmation Dialog */}
+      {/* Swap Confirmation Dialog — bottom sheet */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Confirm Swap</DialogTitle>
-            </DialogHeader>
-            {payToken && receiveToken && currentNativeToken ? (
-            <div className="space-y-4 p-4">
-              {/* Pay Token */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
-                <TokenIcon token={payToken} chains={chains} />
-                <div>
-                  <div className="font-semibold text-lg">{payAmount} {payToken.symbol}</div>
-                  <div className="text-sm text-muted-foreground">{getNetworkStandard(payToken.chainId)}</div>
-                </div>
-              </div>
+        <DialogContent
+          className="p-0 gap-0 flex flex-col rounded-t-2xl rounded-b-none data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-left-0 data-[state=closed]:slide-out-to-left-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 [&>button:last-child]:hidden backdrop-blur-2xl border-t border-white/20"
+          style={{ position: 'fixed', bottom: 0, top: 'auto', left: 0, right: 0, transform: 'none', maxWidth: '100%', width: '100%', borderRadius: '16px 16px 0 0', margin: 0, background: 'var(--glass-bg)' }}
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+          </div>
 
-              {/* Arrow Down */}
-              <div className="flex justify-center">
-                <ArrowUpDown className="h-5 w-5 text-muted-foreground" />
-              </div>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-1 pb-3 flex-shrink-0">
+            <div className="w-8" />
+            <DialogTitle className="text-base font-semibold">Swap</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowConfirmDialog(false)}
+              data-testid="button-close-swap-dialog"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
 
-              {/* Receive Token */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
-                <TokenIcon token={receiveToken} chains={chains} />
-                <div>
-                  <div className="font-semibold text-lg">{receiveAmount} {receiveToken.symbol}</div>
-                  <div className="text-sm text-muted-foreground">{getNetworkStandard(receiveToken.chainId)}</div>
-                </div>
-              </div>
-
-              {/* Exchange Rate */}
-              <div className="bg-muted rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Exchange Rate</span>
-                  <span className="font-semibold">
-                    1 {payToken.symbol} ≈ {(parseFloat(receiveAmount.replace(/,/g, "")) / parseFloat(payAmount.replace(/,/g, ""))).toFixed(6)} {receiveToken.symbol}
-                  </span>
-                </div>
-              </div>
-
-              {/* Network Fee */}
-              <div className="bg-muted rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Network Fee</span>
-                  <span className="font-semibold">
-                    {parseFloat(feeData?.feeAmount || "0.001")} {currentNativeToken.symbol}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded bg-background">
-                  <span className="text-sm">Pay with</span>
-                  <div className="flex items-center gap-2">
-                    {currentNativeToken.icon && (
-                      <img src={currentNativeToken.icon} alt={currentNativeToken.symbol} className="w-5 h-5 rounded-full" />
-                    )}
-                    <span className="text-sm font-medium">{currentNativeToken.symbol}</span>
+          {payToken && receiveToken ? (
+            <div className="px-4 pb-6 space-y-3 overflow-y-auto flex-1">
+              {/* Token pair card */}
+              <div className="glass-card overflow-hidden">
+                {/* Pay row */}
+                <div className="flex items-center gap-3 px-4 py-4">
+                  <TokenIcon token={payToken} chains={chains} />
+                  <div>
+                    <div className="font-semibold text-base">- {payAmount} {payToken.symbol}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {getNetworkStandard(payToken.chainId)}
+                    </div>
                   </div>
                 </div>
-                <div className="text-xs text-right text-muted-foreground">
-                  {currentNativeToken.symbol} Balance: {formatBalance(currentNativeToken.balance)}
-                </div>
-              </div>
-
-              {/* Provider */}
-              <div className="bg-muted rounded-lg p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Provider</span>
-                  <div className="flex items-center gap-2">
-                    <img src={selectedProvider.logoUrl} alt={selectedProvider.name} className="w-5 h-5 rounded-full" />
-                    <span className="font-semibold">{selectedProvider.name}</span>
+                <div className="h-px bg-white/20 mx-4" />
+                {/* Receive row */}
+                <div className="flex items-center gap-3 px-4 py-4">
+                  <TokenIcon token={receiveToken} chains={chains} />
+                  <div>
+                    <div className="font-semibold text-base">+ {receiveAmount} {receiveToken.symbol}</div>
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              {/* Network Fee card */}
+              <div className="glass-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 text-sm">
+                  <span className="text-muted-foreground font-medium">Network Fee</span>
+                  <span className="font-medium text-xs tabular-nums">
+                    {effectiveFeeToken > 0
+                      ? `${effectiveFeeToken.toLocaleString("en-US", { maximumFractionDigits: 8 })} ${nativeSymbol}${effectiveFeeUsd > 0 ? ` ≈ $${effectiveFeeUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ""}`
+                      : `— ${nativeSymbol}`}
+                  </span>
+                </div>
+                {/* Fee token selector row — tap to view receive QR */}
+                <button
+                  type="button"
+                  className="mx-3 mb-3 rounded-lg glass-card px-4 py-2.5 flex items-center gap-2 w-[calc(100%-1.5rem)] hover-elevate active-elevate-2"
+                  onClick={() => currentNativeToken?._id && setLocation(`/receive-qr/${currentNativeToken._id}`)}
+                  data-testid="button-native-balance-qr"
+                >
+                  {currentNativeToken?.icon && (
+                    <img
+                      src={currentNativeToken.icon}
+                      alt={nativeSymbol}
+                      className="w-5 h-5 rounded-full flex-shrink-0"
+                    />
+                  )}
+                  <span className="text-sm font-medium">{nativeSymbol}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    Balance: {currentNativeToken ? formatBalance(currentNativeToken.balance) : "0"}
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                </button>
+              </div>
+
+              {/* Insufficient gas warning */}
+              {hasInsufficientGas && (
+                <p className="text-xs font-medium leading-relaxed px-1" style={{ color: "#f97316" }}>
+                  Your {nativeSymbol} is not enough to pay gas fee, please add more {nativeSymbol} to your wallet or select other options.
+                </p>
+              )}
+
+              {/* Permission warning */}
+              {!canSendCrypto && (
+                <p className="text-xs font-medium leading-relaxed px-1" style={{ color: "#f97316" }}>
+                  Swapping crypto is currently disabled on your account. Please contact support for assistance.
+                </p>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-1">
                 <Button
                   variant="outline"
+                  className="flex-1"
                   onClick={() => setShowConfirmDialog(false)}
                   disabled={swapMutation.isPending}
                   data-testid="button-cancel-swap"
@@ -852,21 +898,22 @@ export default function Swap() {
                   Cancel
                 </Button>
                 <Button
+                  className="flex-1"
                   onClick={confirmSwap}
-                  disabled={swapMutation.isPending}
+                  disabled={swapMutation.isPending || hasInsufficientGas || !canSendCrypto}
                   data-testid="button-confirm-swap"
                 >
-                  {swapMutation.isPending ? "Swapping..." : "Swap"}
+                  {swapMutation.isPending ? "Swapping..." : "Confirm"}
                 </Button>
               </div>
             </div>
-            ) : (
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Loading...</p>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+          ) : (
+            <div className="px-4 pb-6">
+              <p className="text-sm text-muted-foreground text-center">Loading...</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
       <BottomNav />
 
@@ -874,6 +921,7 @@ export default function Swap() {
       <ProcessingOverlay
         isProcessing={isProcessing}
         onComplete={handleProcessingComplete}
+        onSuccess={() => { playSuccessSound(); }}
         message="Processing swap..."
       />
     </div>

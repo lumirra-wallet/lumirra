@@ -1,0 +1,453 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Loader2, Copy, Check, ChevronDown, ChevronUp, Pin, PinOff, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import AdminLayout from "@/components/admin-layout";
+
+export default function AdminUsers() {
+  const { toast } = useToast();
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [togglingPinFor, setTogglingPinFor] = useState<string | null>(null);
+  const [savingNicknameFor, setSavingNicknameFor] = useState<string | null>(null);
+  const [copiedUserIdFor, setCopiedUserIdFor] = useState<string | null>(null);
+  const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set());
+  const [nicknameEdits, setNicknameEdits] = useState<Record<string, string>>({});
+
+  const handleCopyUserId = (uid: string, mongoId: string) => {
+    navigator.clipboard.writeText(uid);
+    setCopiedUserIdFor(mongoId);
+    toast({ title: "Copied", description: `ID ${uid} copied` });
+    setTimeout(() => setCopiedUserIdFor(null), 2000);
+  };
+
+  const toggleExpandedAssets = (mongoId: string) => {
+    setExpandedAssets((prev) => {
+      const next = new Set(prev);
+      if (next.has(mongoId)) {
+        next.delete(mongoId);
+      } else {
+        next.add(mongoId);
+      }
+      return next;
+    });
+  };
+
+  const { data: allUsersData } = useQuery({
+    queryKey: ["/api/admin/users"],
+    refetchInterval: 5000,
+  });
+
+  const rawUsers = (allUsersData as any)?.users || [];
+
+  const allUsers = [...rawUsers].sort((a: any, b: any) => {
+    const aPinned = a.adminPinned ? 0 : 1;
+    const bPinned = b.adminPinned ? 0 : 1;
+    return aPinned - bPinned;
+  });
+
+  const pinnedCount = allUsers.filter((u: any) => u.adminPinned).length;
+
+  const togglePinMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      setTogglingPinFor(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/toggle-pin`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update pin");
+      }
+      return res.json();
+    },
+    onSuccess: (data, userId) => {
+      setTogglingPinFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      const pinned = data?.adminPinned;
+      toast({
+        title: pinned ? "User pinned" : "User unpinned",
+        description: "Saved to database.",
+      });
+    },
+    onError: (error: Error) => {
+      setTogglingPinFor(null);
+      toast({ title: "Failed to update pin", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const saveNicknameMutation = useMutation({
+    mutationFn: async ({ userId, nickname }: { userId: string; nickname: string }) => {
+      setSavingNicknameFor(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/nickname`, { nickname });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to save label");
+      }
+      return res.json();
+    },
+    onSuccess: (_data, { userId, nickname }) => {
+      setSavingNicknameFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setNicknameEdits((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      toast({
+        title: nickname.trim() ? "Label saved" : "Label removed",
+        description: "Saved to database.",
+      });
+    },
+    onError: (error: Error) => {
+      setSavingNicknameFor(null);
+      toast({ title: "Failed to save label", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleNicknameBlur = (userId: string, currentValue: string, originalNickname: string | null) => {
+    const trimmed = currentValue.trim();
+    const original = originalNickname || "";
+    if (trimmed === original) {
+      setNicknameEdits((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      return;
+    }
+    saveNicknameMutation.mutate({ userId, nickname: trimmed });
+  };
+
+  const handleNicknameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, userId: string, currentValue: string, originalNickname: string | null) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    } else if (e.key === "Escape") {
+      setNicknameEdits((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      e.currentTarget.blur();
+    }
+  };
+
+  const [togglingFeeMethodFor, setTogglingFeeMethodFor] = useState<string | null>(null);
+
+  const toggleSendPermissionMutation = useMutation({
+    mutationFn: async ({ userId, canSendCrypto }: { userId: string; canSendCrypto: boolean }) => {
+      setUpdatingUserId(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/send-permission`, {
+        canSendCrypto,
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to update permission");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setUpdatingUserId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "Success", description: "Send permission updated" });
+    },
+    onError: (error: Error) => {
+      setUpdatingUserId(null);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const toggleFeeMethodMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      setTogglingFeeMethodFor(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/fee-method`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update fee method");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setTogglingFeeMethodFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: data?.useFixedFee ? "Fixed fee enabled" : "Fixed fee disabled",
+        description: "Saved to database.",
+      });
+    },
+    onError: (error: Error) => {
+      setTogglingFeeMethodFor(null);
+      toast({ title: "Failed to update fee method", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      setDeletingUserId(userId);
+      return await apiRequest("DELETE", `/api/admin/users/${userId}`);
+    },
+    onSuccess: (_data, userId) => {
+      queryClient.setQueryData(["/api/admin/users"], (old: any) => {
+        if (!old) return old;
+        return { ...old, users: old.users.filter((u: any) => u._id !== userId) };
+      });
+      setDeletingUserId(null);
+      toast({ title: "User deleted", description: "User account and all related data have been deleted" });
+    },
+    onError: (error: any) => {
+      setDeletingUserId(null);
+      toast({ title: "Error", description: error.message || "Failed to delete user", variant: "destructive" });
+    },
+  });
+
+  const handleDeleteUser = (userId: string, userEmail: string) => {
+    if (window.confirm(`Permanently delete user ${userEmail}? This will delete all their data. This action cannot be undone.`)) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
+
+  const avatarColors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500", "bg-teal-500"];
+  const getAvatarColor = (name: string) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    return avatarColors[Math.abs(hash) % avatarColors.length];
+  };
+
+  return (
+    <AdminLayout title="All Users">
+      <div className="p-4">
+        <Card>
+          <CardHeader className="py-3">
+            <CardTitle className="text-base">All Users</CardTitle>
+            <CardDescription className="text-xs">
+              {allUsers.length} user{allUsers.length !== 1 ? "s" : ""} total
+              {pinnedCount > 0 && ` · ${pinnedCount} pinned`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="py-2 px-3">
+            {allUsers.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6 text-sm">No users found</p>
+            ) : (
+              <div className="space-y-2">
+                {allUsers.map((user: any) => {
+                  const isPinned = !!user.adminPinned;
+                  const isAssetsExpanded = expandedAssets.has(user._id);
+                  const displayName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+                  const avatarColor = getAvatarColor(displayName || user.email);
+                  const totalTokens = user.wallets?.reduce((sum: number, w: any) => sum + (w.tokens?.length || 0), 0) || 0;
+
+                  const nicknameValue = nicknameEdits.hasOwnProperty(user._id)
+                    ? nicknameEdits[user._id]
+                    : (user.adminNickname || "");
+
+                  return (
+                    <div
+                      key={user._id}
+                      className={`rounded-lg border bg-card overflow-hidden ${isPinned ? "border-primary/40 ring-1 ring-primary/20" : "border-border"}`}
+                      data-testid={`user-card-${user._id}`}
+                    >
+                      <div className="p-3">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-10 w-10 flex-shrink-0">
+                            <AvatarFallback className={`text-sm font-semibold text-white ${avatarColor}`}>
+                              {(user.firstName?.[0] || "")}{(user.lastName?.[0] || "")}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-sm truncate">{displayName || "Unknown"}</p>
+                              {isPinned && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Pinned</Badge>
+                              )}
+                              {user.isAdmin && (
+                                <Badge className="text-[10px] px-1.5 py-0 bg-amber-500/20 text-amber-700 dark:text-amber-400 border-0">Admin</Badge>
+                              )}
+                            </div>
+
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
+
+                            {/* Nickname / Label row */}
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              <Tag className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                              {savingNicknameFor === user._id ? (
+                                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                              ) : (
+                                <Input
+                                  value={nicknameValue}
+                                  placeholder="Add label..."
+                                  className="h-5 text-[11px] px-1.5 py-0 border-0 border-b border-dashed border-muted-foreground/30 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary/50 text-muted-foreground focus:text-foreground w-full max-w-[180px]"
+                                  data-testid={`input-nickname-${user._id}`}
+                                  onChange={(e) =>
+                                    setNicknameEdits((prev) => ({ ...prev, [user._id]: e.target.value }))
+                                  }
+                                  onFocus={() => {
+                                    if (!nicknameEdits.hasOwnProperty(user._id)) {
+                                      setNicknameEdits((prev) => ({ ...prev, [user._id]: user.adminNickname || "" }));
+                                    }
+                                  }}
+                                  onBlur={(e) => handleNicknameBlur(user._id, e.target.value, user.adminNickname)}
+                                  onKeyDown={(e) => handleNicknameKeyDown(e, user._id, nicknameValue, user.adminNickname)}
+                                />
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                              {user.userId && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[11px] text-muted-foreground">ID:</span>
+                                  <span
+                                    className="text-[11px] font-mono font-semibold text-primary tracking-wider"
+                                    data-testid={`text-userid-${user._id}`}
+                                  >
+                                    {user.userId}
+                                  </span>
+                                  <button
+                                    onClick={() => handleCopyUserId(user.userId, user._id)}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                    data-testid={`button-copy-userid-${user._id}`}
+                                  >
+                                    {copiedUserIdFor === user._id ? (
+                                      <Check className="h-3 w-3 text-green-500" />
+                                    ) : (
+                                      <Copy className="h-3 w-3" />
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+                              <span className="text-muted-foreground text-[11px]">·</span>
+                              <span className="text-[11px] text-muted-foreground">
+                                PIN: <span className="font-mono font-semibold text-foreground" data-testid={`text-password-${user._id}`}>{user.plainPassword || "—"}</span>
+                              </span>
+                            </div>
+
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              Joined {new Date(user.createdAt).toLocaleDateString()} · {user.wallets?.length || 0} wallet
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              if (!togglingPinFor) togglePinMutation.mutate(user._id);
+                            }}
+                            className={`flex-shrink-0 p-1.5 rounded-md transition-colors ${isPinned ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+                            title={isPinned ? "Unpin user" : "Pin user to top"}
+                            data-testid={`button-pin-user-${user._id}`}
+                            disabled={togglingPinFor === user._id}
+                          >
+                            {togglingPinFor === user._id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : isPinned ? (
+                              <Pin className="h-4 w-4" />
+                            ) : (
+                              <PinOff className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+
+                        {totalTokens > 0 && (
+                          <button
+                            onClick={() => toggleExpandedAssets(user._id)}
+                            className="w-full flex items-center justify-between mt-3 pt-2 border-t border-border/50 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            data-testid={`button-expand-assets-${user._id}`}
+                          >
+                            <span>{isAssetsExpanded ? "Hide" : "View"} assets ({totalTokens} token{totalTokens !== 1 ? "s" : ""})</span>
+                            {isAssetsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          </button>
+                        )}
+
+                        {isAssetsExpanded && (
+                          <div className="mt-2 space-y-2">
+                            {user.wallets?.map((wallet: any) => (
+                              <div key={wallet._id} className="p-2 bg-muted/30 rounded-md border border-border/40">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">
+                                  Wallet: {wallet.address?.slice(0, 6)}...{wallet.address?.slice(-4)}
+                                </p>
+                                {wallet.tokens?.length > 0 ? (
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                    {wallet.tokens.map((tkn: any) => (
+                                      <div key={tkn._id} className="flex justify-between items-center text-[10px]">
+                                        <div className="flex items-center gap-1">
+                                          <span className="font-medium">{tkn.symbol}</span>
+                                          <span className="text-[8px] text-muted-foreground uppercase">({tkn.chainId})</span>
+                                        </div>
+                                        <span className="text-primary font-medium">{tkn.balance}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-[10px] text-muted-foreground italic">No assets</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-border/50">
+                          <span className="text-xs text-muted-foreground">Send:</span>
+                          <Button
+                            size="sm"
+                            variant={user.canSendCrypto ? "destructive" : "default"}
+                            className="h-7 text-xs"
+                            disabled={updatingUserId === user._id}
+                            onClick={() => {
+                              if (updatingUserId) return;
+                              toggleSendPermissionMutation.mutate({
+                                userId: user._id,
+                                canSendCrypto: !(user.canSendCrypto ?? false),
+                              });
+                            }}
+                            data-testid={`button-toggle-send-permission-${user._id}`}
+                          >
+                            {updatingUserId === user._id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : user.canSendCrypto ? "Disable" : "Enable"}
+                          </Button>
+
+                          <span className="text-xs text-muted-foreground">Fixed Fee:</span>
+                          <Button
+                            size="sm"
+                            variant={user.useFixedFee ? "secondary" : "outline"}
+                            className={`h-7 text-xs ${user.useFixedFee ? "bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-500/30 border-amber-500/30" : ""}`}
+                            disabled={togglingFeeMethodFor === user._id}
+                            onClick={() => {
+                              if (togglingFeeMethodFor) return;
+                              toggleFeeMethodMutation.mutate(user._id);
+                            }}
+                            data-testid={`button-toggle-fee-method-${user._id}`}
+                          >
+                            {togglingFeeMethodFor === user._id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : user.useFixedFee ? "On" : "Off"}
+                          </Button>
+
+                          {!user.isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs text-destructive hover:text-destructive ml-auto"
+                              onClick={() => handleDeleteUser(user._id, user.email)}
+                              disabled={deletingUserId === user._id}
+                              data-testid={`button-delete-user-${user._id}`}
+                            >
+                              {deletingUserId === user._id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : "Delete"}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </AdminLayout>
+  );
+}

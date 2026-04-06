@@ -378,8 +378,8 @@ export default function CreateAccount() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1677FF]/10 via-background to-[#2ED8FF]/10" />
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden glass-bg bg-background">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1677FF]/12 via-background to-[#2ED8FF]/12" />
       <motion.div 
         className="absolute top-20 right-0 w-[600px] h-[600px] bg-[#1677FF]/10 rounded-full blur-3xl"
         animate={{
@@ -413,7 +413,7 @@ export default function CreateAccount() {
         className="w-full max-w-md relative z-10"
       >
         {step === "personal" && (
-          <div className="bg-card/50 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl p-8">
+          <div className="glass-modal p-8">
             <Button
               variant="ghost"
               size="sm"
@@ -570,12 +570,8 @@ export default function CreateAccount() {
                       <div
                         key={index}
                         data-testid={`verification-code-box-${index}`}
-                        className={`w-12 h-16 border-2 rounded-lg flex items-center justify-center text-2xl transition-colors ${
-                          isShaking && digit
-                            ? "border-red-500 bg-red-500/10"
-                            : digit 
-                            ? "border-primary" 
-                            : "border-muted-foreground/30"
+                        className={`glass-pin-box w-12 h-16 flex items-center justify-center text-2xl ${
+                          isShaking && digit ? "error" : digit ? "filled" : ""
                         }`}
                       >
                         {digit && "•"}
@@ -605,29 +601,29 @@ export default function CreateAccount() {
                 </div>
 
                 <div className="w-full max-w-xs">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
                         data-testid={`button-verify-${num}`}
                         onClick={() => handleVerificationNumberClick(num.toString())}
-                        className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                        className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                       >
                         {num}
                       </button>
                     ))}
-                    <div className="h-16"></div>
+                    <div className="aspect-square w-full"></div>
                     <button
                       data-testid="button-verify-0"
                       onClick={() => handleVerificationNumberClick("0")}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                      className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                     >
                       0
                     </button>
                     <button
                       data-testid="button-verify-delete"
                       onClick={handleVerificationDelete}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 flex items-center justify-center"
+                      className="glass-keypad-btn aspect-square w-full flex items-center justify-center"
                     >
                       <Delete className="w-6 h-6" />
                     </button>
@@ -675,12 +671,8 @@ export default function CreateAccount() {
                       <div
                         key={index}
                         data-testid={`pin-box-${index}`}
-                        className={`w-12 h-16 border-2 rounded-lg flex items-center justify-center text-2xl transition-colors ${
-                          isShaking && digit
-                            ? "border-red-500 bg-red-500/10"
-                            : digit 
-                            ? "border-primary" 
-                            : "border-muted-foreground/30"
+                        className={`glass-pin-box w-12 h-16 flex items-center justify-center text-2xl ${
+                          isShaking && digit ? "error" : digit ? "filled" : ""
                         }`}
                       >
                         {digit && "•"}
@@ -697,29 +689,29 @@ export default function CreateAccount() {
                 </div>
 
                 <div className="w-full max-w-xs">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
                         data-testid={`button-num-${num}`}
                         onClick={() => handlePinNumberClick(num.toString())}
-                        className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                        className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                       >
                         {num}
                       </button>
                     ))}
-                    <div className="h-16"></div>
+                    <div className="aspect-square w-full"></div>
                     <button
                       data-testid="button-num-0"
                       onClick={() => handlePinNumberClick("0")}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                      className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                     >
                       0
                     </button>
                     <button
                       data-testid="button-delete"
                       onClick={handlePinDelete}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 flex items-center justify-center"
+                      className="glass-keypad-btn aspect-square w-full flex items-center justify-center"
                     >
                       <Delete className="w-6 h-6" />
                     </button>
@@ -767,12 +759,8 @@ export default function CreateAccount() {
                       <div
                         key={index}
                         data-testid={`confirm-pin-box-${index}`}
-                        className={`w-12 h-16 border-2 rounded-lg flex items-center justify-center text-2xl transition-colors ${
-                          isShaking && digit
-                            ? "border-red-500 bg-red-500/10"
-                            : digit 
-                            ? "border-primary" 
-                            : "border-muted-foreground/30"
+                        className={`glass-pin-box w-12 h-16 flex items-center justify-center text-2xl ${
+                          isShaking && digit ? "error" : digit ? "filled" : ""
                         }`}
                       >
                         {digit && "•"}
@@ -789,29 +777,29 @@ export default function CreateAccount() {
                 </div>
 
                 <div className="w-full max-w-xs">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
                         data-testid={`button-confirm-num-${num}`}
                         onClick={() => handleConfirmNumberClick(num.toString())}
-                        className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                        className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                       >
                         {num}
                       </button>
                     ))}
-                    <div className="h-16"></div>
+                    <div className="aspect-square w-full"></div>
                     <button
                       data-testid="button-confirm-num-0"
                       onClick={() => handleConfirmNumberClick("0")}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                      className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                     >
                       0
                     </button>
                     <button
                       data-testid="button-confirm-delete"
                       onClick={handleDelete}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 flex items-center justify-center"
+                      className="glass-keypad-btn aspect-square w-full flex items-center justify-center"
                     >
                       <Delete className="w-6 h-6" />
                     </button>
@@ -823,7 +811,7 @@ export default function CreateAccount() {
         )}
 
         {step === "success" && (
-          <div className="bg-card/50 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl p-8">
+          <div className="glass-modal p-8">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}

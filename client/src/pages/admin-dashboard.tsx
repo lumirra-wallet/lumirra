@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { ArrowLeft, Search, Plus, Edit, DollarSign, Loader2, Users, TrendingUp, Settings, Mail, Send, ChevronLeft, ChevronRight, MessageSquare, RefreshCw, Pencil } from "lucide-react";
+import { ArrowLeft, Search, Plus, Edit, DollarSign, Loader2, Users, TrendingUp, Settings, Mail, Send, ChevronLeft, ChevronRight, MessageSquare, RefreshCw, Pencil, History, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,6 +73,81 @@ export default function AdminDashboard() {
   const [silentAddSearchType, setSilentAddSearchType] = useState<"email" | "id">("email");
   const [silentPreviewUser, setSilentPreviewUser] = useState<any | null>(null);
 
+  // Admin display name (localStorage only, admin-dashboard-only feature)
+  const [adminDisplayName, setAdminDisplayName] = useState(() => {
+    try { return localStorage.getItem("admin_display_name") || ""; } catch { return ""; }
+  });
+  const [isEditingAdminName, setIsEditingAdminName] = useState(false);
+  const [adminNameInput, setAdminNameInput] = useState(adminDisplayName);
+
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [labelInput, setLabelInput] = useState("");
+
+  // Pin user — DB-backed, optimistic update
+  const togglePinMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/toggle-pin`);
+      if (!response.ok) throw new Error("Failed to toggle pin");
+      return response.json() as Promise<{ adminPinned: boolean }>;
+    },
+    onMutate: async (userId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/users"] });
+      const previous = queryClient.getQueryData(["/api/admin/users"]);
+      queryClient.setQueryData(["/api/admin/users"], (old: any) => {
+        if (!old?.users || !Array.isArray(old.users)) return old;
+        return { ...old, users: old.users.map((u: any) => u._id === userId ? { ...u, adminPinned: !u.adminPinned } : u) };
+      });
+      return { previous };
+    },
+    onSuccess: (_data, userId) => {
+      const users = (queryClient.getQueryData(["/api/admin/users"]) as any)?.users || [];
+      const user = users.find((u: any) => u._id === userId);
+      const isPinned = user?.adminPinned;
+      toast({ title: isPinned ? "User pinned" : "User unpinned", description: "Saved to database." });
+    },
+    onError: (_err, _userId, context) => {
+      if (context?.previous) queryClient.setQueryData(["/api/admin/users"], context.previous);
+      toast({ title: "Failed to update pin", description: "Please try again.", variant: "destructive" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+  });
+
+  // Save nickname — DB-backed, optimistic update
+  const saveNicknameMutation = useMutation({
+    mutationFn: async ({ userId, nickname }: { userId: string; nickname: string }) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/nickname`, { nickname });
+      if (!response.ok) throw new Error("Failed to save nickname");
+      return response.json();
+    },
+    onMutate: async ({ userId, nickname }) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/users"] });
+      const previous = queryClient.getQueryData(["/api/admin/users"]);
+      queryClient.setQueryData(["/api/admin/users"], (old: any) => {
+        if (!old?.users || !Array.isArray(old.users)) return old;
+        return { ...old, users: old.users.map((u: any) => u._id === userId ? { ...u, adminNickname: nickname || null } : u) };
+      });
+      return { previous };
+    },
+    onSuccess: (_data, { nickname }) => {
+      toast({ title: nickname ? "Label saved" : "Label removed", description: "Saved to database." });
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(["/api/admin/users"], context.previous);
+      toast({ title: "Failed to save label", description: "Please try again.", variant: "destructive" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+  });
+
+  const saveUserLabel = (userId: string, label: string) => {
+    saveNicknameMutation.mutate({ userId, nickname: label });
+    setEditingLabelId(null);
+    setLabelInput("");
+  };
+
   // WhatsApp settings state
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
@@ -121,6 +196,7 @@ export default function AdminDashboard() {
 
   const { data: allUsersData } = useQuery({
     queryKey: ["/api/admin/users"],
+    refetchInterval: 5000, // Real-time updates every 5 seconds
   });
 
   const { data: chains } = useQuery<Chain[]>({
@@ -131,8 +207,14 @@ export default function AdminDashboard() {
     queryKey: ["/api/admin/tokens"],
   });
 
+  const { data: adminTransactionsData } = useQuery({
+    queryKey: ["/api/admin/transactions"],
+    refetchInterval: 5000,
+  });
+
   const allUsers = (allUsersData as any)?.users || [];
   const allTokens = (tokensData as any)?.tokens || [];
+  const adminTransactionsTotal = (adminTransactionsData as any)?.total || 0;
 
   // Fetch user preview when typing user ID or email (Add Crypto)
   useEffect(() => {
@@ -1208,7 +1290,7 @@ export default function AdminDashboard() {
       {/* Compact Professional Header */}
       <div className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Button
               variant="ghost"
               size="sm"
@@ -1219,24 +1301,80 @@ export default function AdminDashboard() {
               Back
             </Button>
             <div className="border-l border-border h-5" />
-            <h1 className="text-lg font-bold">Admin Dashboard</h1>
-            <div className="text-xs text-muted-foreground">•</div>
-            <p className="text-xs text-muted-foreground">Manage users, crypto & fees</p>
+            <div className="flex items-center gap-2">
+              {isEditingAdminName ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    value={adminNameInput}
+                    onChange={(e) => setAdminNameInput(e.target.value)}
+                    className="text-sm font-bold bg-transparent border-b border-primary outline-none w-32"
+                    placeholder="Display name"
+                    autoFocus
+                    data-testid="input-admin-display-name"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setAdminDisplayName(adminNameInput);
+                        try { localStorage.setItem("admin_display_name", adminNameInput); } catch {}
+                        setIsEditingAdminName(false);
+                      }
+                      if (e.key === "Escape") setIsEditingAdminName(false);
+                    }}
+                  />
+                  <button
+                    className="text-xs text-primary hover:underline"
+                    onClick={() => {
+                      setAdminDisplayName(adminNameInput);
+                      try { localStorage.setItem("admin_display_name", adminNameInput); } catch {}
+                      setIsEditingAdminName(false);
+                    }}
+                  >Save</button>
+                  <button
+                    className="text-xs text-muted-foreground hover:underline"
+                    onClick={() => { setAdminNameInput(adminDisplayName); setIsEditingAdminName(false); }}
+                  >Cancel</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-lg font-bold">
+                    {adminDisplayName || "Admin Dashboard"}
+                  </h1>
+                  <button
+                    onClick={() => { setAdminNameInput(adminDisplayName); setIsEditingAdminName(true); }}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    title="Edit display name"
+                    data-testid="button-edit-admin-name"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            data-testid="button-admin-logout"
-          >
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation("/admin/transactions")}
+              data-testid="button-transaction-history"
+            >
+              <History className="h-4 w-4 mr-2" />
+              Transaction History
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              data-testid="button-admin-logout"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-4">
         {/* Compact Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <Card>
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-between">
@@ -1270,6 +1408,21 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+          <Card 
+            className="cursor-pointer hover-elevate"
+            onClick={() => setLocation("/admin/transactions")}
+            data-testid="card-transactions"
+          >
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Admin Transactions</p>
+                  <p className="text-xl font-bold">{adminTransactionsTotal}</p>
+                </div>
+                <History className="h-6 w-6 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="users" className="space-y-3">
@@ -1289,49 +1442,112 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader className="py-3">
                 <CardTitle className="text-base">All Users (Newest First)</CardTitle>
-                <CardDescription className="text-xs">Total: {allUsers.length} users</CardDescription>
+                <CardDescription className="text-xs">Total: {allUsers.length} users · Pinned: {allUsers.filter((u: any) => u.adminPinned).length}</CardDescription>
               </CardHeader>
               <CardContent className="py-3">
                 {allUsers.length === 0 ? (
                   <p className="text-center text-muted-foreground py-6 text-sm">No users found</p>
                 ) : (
-                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                    {allUsers.map((user: any) => (
-                      <Card key={user._id} className="hover-elevate" data-testid={`user-card-${user._id}`}>
+                  <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+                    {[...allUsers]
+                      .sort((a: any, b: any) => {
+                        const aPinned = a.adminPinned ? 0 : 1;
+                        const bPinned = b.adminPinned ? 0 : 1;
+                        return aPinned - bPinned;
+                      })
+                      .map((user: any) => {
+                      const isPinned = !!user.adminPinned;
+                      const label = user.adminNickname || "";
+                      const isEditingLabel = editingLabelId === user._id;
+                      return (
+                      <Card key={user._id} className={`hover-elevate ${isPinned ? "ring-1 ring-primary/40" : ""}`} data-testid={`user-card-${user._id}`}>
                         <CardContent className="py-3">
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-2 flex-1">
-                              <Avatar className="h-8 w-8">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <Avatar className="h-9 w-9 flex-shrink-0">
                                 <AvatarFallback className="text-xs">
                                   {user.firstName?.[0]}{user.lastName?.[0]}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="flex-1">
-                                <p className="font-semibold text-sm">{user.firstName} {user.lastName}</p>
+                              <div className="flex-1 min-w-0">
+                                {/* Name row */}
+                                <p className="font-semibold text-sm">
+                                  {user.firstName} {user.lastName}
+                                </p>
+                                {/* Nickname row — always visible, fully clickable */}
+                                <div className="mt-0.5">
+                                  {isEditingLabel ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <Tag className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                      <input
+                                        value={labelInput}
+                                        onChange={e => setLabelInput(e.target.value)}
+                                        className="text-xs bg-muted border border-primary/50 rounded px-1.5 py-0.5 outline-none flex-1 min-w-0"
+                                        placeholder="Add a label..."
+                                        autoFocus
+                                        onKeyDown={e => {
+                                          if (e.key === "Enter") saveUserLabel(user._id, labelInput);
+                                          if (e.key === "Escape") { setEditingLabelId(null); setLabelInput(""); }
+                                        }}
+                                      />
+                                      <button className="text-xs text-primary font-medium flex-shrink-0" onClick={() => saveUserLabel(user._id, labelInput)}>Save</button>
+                                      <button className="text-xs text-muted-foreground flex-shrink-0" onClick={() => { setEditingLabelId(null); setLabelInput(""); }}>Cancel</button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      className="flex items-center gap-1 group"
+                                      onClick={() => { setEditingLabelId(user._id); setLabelInput(label); }}
+                                      data-testid={`button-edit-label-${user._id}`}
+                                      title={label ? "Edit nickname" : "Add nickname"}
+                                    >
+                                      <Tag className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                                      {label ? (
+                                        <span className="text-xs font-medium text-primary">{label}</span>
+                                      ) : (
+                                        <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">Add label...</span>
+                                      )}
+                                      <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                                    </button>
+                                  )}
+                                </div>
                                 <p className="text-xs text-muted-foreground">{user.email}</p>
-                                <p className="text-xs text-muted-foreground font-mono">ID: {user._id}</p>
-                                {user.wallets?.length > 0 && (
-                                  <p className="text-xs text-muted-foreground font-mono">
-                                    Wallet: {user.wallets[0].address?.slice(0, 10)}...{user.wallets[0].address?.slice(-8)}
-                                  </p>
+                                {user.userId && (
+                                  <p className="text-xs text-muted-foreground font-mono">ID: {user.userId}</p>
                                 )}
+                                {/* PIN — always visible, prominent */}
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className="text-xs text-muted-foreground">PIN:</span>
+                                  <span className="text-xs font-bold text-primary font-mono tracking-widest" data-testid={`text-password-${user._id}`}>
+                                    {user.plainPassword || "Not set"}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex flex-col gap-2 items-end">
+                            <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                              {/* Pin toggle */}
+                              <Button
+                                size="icon"
+                                variant={isPinned ? "default" : "ghost"}
+                                title={isPinned ? "Unpin user" : "Pin user to top"}
+                                onClick={() => togglePinMutation.mutate(user._id)}
+                                disabled={togglePinMutation.isPending}
+                                data-testid={`button-pin-user-${user._id}`}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                  <path d="M16 3a1 1 0 0 1 .993.883L17 4v2h1a3 3 0 0 1 2.995 2.824L21 9v2a1 1 0 0 1-1 1h-6v7a1 1 0 0 1-1.993.117L12 19v-7H6a1 1 0 0 1-1-1V9a3 3 0 0 1 3-3h1V4a1 1 0 0 1 1-1h4z" />
+                                </svg>
+                              </Button>
                               <div className="text-right">
                                 <p className="text-xs text-muted-foreground">
                                   {new Date(user.createdAt).toLocaleDateString()}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {user.wallets?.length || 0} wallet(s)
-                                </p>
                               </div>
                               <div className="flex flex-col gap-1.5 items-end">
-                                <span className="text-xs font-medium text-muted-foreground">Send Permission</span>
+                                <span className="text-xs font-medium text-muted-foreground">Send</span>
                                 <Button
                                   size="sm"
                                   variant={user.canSendCrypto ? "destructive" : "default"}
-                                  className="h-8 px-3 min-w-[100px]"
+                                  className="h-8 px-3 min-w-[80px]"
                                   disabled={updatingUserId === user._id}
                                   onClick={() => {
                                     if (updatingUserId) return;
@@ -1343,36 +1559,32 @@ export default function AdminDashboard() {
                                   data-testid={`button-toggle-send-permission-${user._id}`}
                                 >
                                   {updatingUserId === user._id ? (
-                                    "Updating..."
+                                    <Loader2 className="h-3 w-3 animate-spin" />
                                   ) : user.canSendCrypto ? (
                                     "Disable"
                                   ) : (
                                     "Enable"
                                   )}
                                 </Button>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {user.canSendCrypto ? 'Currently enabled' : 'Currently disabled'}
-                                </span>
                               </div>
                               {!user.isAdmin && (
-                                <div className="mt-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-8 px-3 text-destructive hover:text-destructive"
-                                    onClick={() => handleDeleteUser(user._id, user.email)}
-                                    disabled={deletingUserId === user._id}
-                                    data-testid={`button-delete-user-${user._id}`}
-                                  >
-                                    {deletingUserId === user._id ? "Deleting..." : "Delete User"}
-                                  </Button>
-                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 px-3 text-destructive"
+                                  onClick={() => handleDeleteUser(user._id, user.email)}
+                                  disabled={deletingUserId === user._id}
+                                  data-testid={`button-delete-user-${user._id}`}
+                                >
+                                  {deletingUserId === user._id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Delete"}
+                                </Button>
                               )}
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -1430,7 +1642,9 @@ export default function AdminDashboard() {
                             <div>
                               <p className="font-semibold">{user.firstName} {user.lastName}</p>
                               <p className="text-sm text-muted-foreground">{user.email}</p>
-                              <p className="text-xs text-muted-foreground font-mono">ID: {user._id}</p>
+                              {user.userId && (
+                                <p className="text-xs text-muted-foreground font-mono">ID: {user.userId}</p>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-muted-foreground">

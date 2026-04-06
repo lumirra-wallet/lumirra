@@ -76,9 +76,9 @@ export default function SwapOrders() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background glass-bg pb-28">
       {/* Header */}
-      <div className="border-b border-border">
+      <div className="glass-header sticky top-0 z-50">
         <div className="container max-w-2xl mx-auto px-4">
           <div className="flex items-center justify-between py-4">
             <Button

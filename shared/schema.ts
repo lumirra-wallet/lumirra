@@ -79,6 +79,7 @@ export const insertTransactionFeeSchema = z.object({
 // Types
 export type User = {
   _id?: string;
+  userId?: string | null;
   email: string;
   password: string;
   firstName: string;
@@ -87,6 +88,11 @@ export type User = {
   profilePhoto?: string | null;
   isAdmin?: boolean;
   canSendCrypto?: boolean;
+  useFixedFee?: boolean;
+  language?: string;
+  fiatCurrency?: string;
+  theme?: "light" | "dark";
+  plainPassword?: string | null;
   createdAt?: Date;
 };
 

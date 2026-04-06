@@ -13,7 +13,7 @@ import { useWallet } from "@/contexts/wallet-context";
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { setWallet } = useWallet();
+  const { setWallet, isAuthenticated, isLoading } = useWallet();
   const [step, setStep] = useState<"email" | "pin" | "reset-email" | "reset-code" | "reset-pin" | "reset-confirm">("email");
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState<string[]>(["", "", "", "", "", ""]);
@@ -26,6 +26,13 @@ export default function Login() {
   const [verifiedResetCode, setVerifiedResetCode] = useState<string>("");
   const [countdown, setCountdown] = useState(0);
   const [isShaking, setIsShaking] = useState(false);
+
+  // Redirect already-authenticated users straight to the dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      setLocation("/dashboard");
+    }
+  }, [isLoading, isAuthenticated, setLocation]);
 
   // Check if user was redirected from "Forget Password" in settings
   useEffect(() => {
@@ -378,32 +385,19 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1677FF]/10 via-background to-[#2ED8FF]/10" />
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden glass-bg bg-background">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1677FF]/12 via-background to-[#2ED8FF]/12" />
       <motion.div 
-        className="absolute top-20 right-0 w-[600px] h-[600px] bg-[#1677FF]/10 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
+        className="absolute top-20 right-0 w-[600px] h-[600px] bg-[#1677FF]/10 rounded-full blur-3xl pointer-events-none"
+        animate={{ opacity: [0.2, 0.5, 0.2] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        style={{ willChange: 'opacity' }}
       />
       <motion.div 
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#2ED8FF]/10 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1
-        }}
+        className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#2ED8FF]/10 rounded-full blur-3xl pointer-events-none"
+        animate={{ opacity: [0.2, 0.5, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        style={{ willChange: 'opacity' }}
       />
 
       <motion.div
@@ -413,7 +407,7 @@ export default function Login() {
         className="w-full max-w-md relative z-10"
       >
         {step === "email" && (
-          <div className="bg-card/50 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl p-8">
+          <div className="glass-modal p-8">
             <Button
               variant="ghost"
               size="sm"
@@ -555,12 +549,8 @@ export default function Login() {
                       <div
                         key={index}
                         data-testid={`pin-box-${index}`}
-                        className={`w-12 h-16 border-2 rounded-lg flex items-center justify-center text-2xl transition-colors ${
-                          isShaking && digit
-                            ? "border-red-500 bg-red-500/10"
-                            : digit 
-                            ? "border-primary" 
-                            : "border-muted-foreground/30"
+                        className={`glass-pin-box w-12 h-16 flex items-center justify-center text-2xl ${
+                          isShaking && digit ? "error" : digit ? "filled" : ""
                         }`}
                       >
                         {digit && <span className="text-2xl">•</span>}
@@ -579,30 +569,30 @@ export default function Login() {
                   </button>
                 </div>
 
-                <div className="w-full max-w-md">
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="w-full max-w-[280px]">
+                  <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
                         data-testid={`button-num-${num}`}
                         onClick={() => handleNumberClick(num.toString())}
-                        className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                        className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                       >
                         {num}
                       </button>
                     ))}
-                    <div className="h-16"></div>
+                    <div className="aspect-square w-full"></div>
                     <button
                       data-testid="button-num-0"
                       onClick={() => handleNumberClick("0")}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                      className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                     >
                       0
                     </button>
                     <button
                       data-testid="button-delete"
                       onClick={handleDelete}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 flex items-center justify-center"
+                      className="glass-keypad-btn aspect-square w-full flex items-center justify-center"
                     >
                       <Delete className="w-6 h-6" />
                     </button>
@@ -614,7 +604,7 @@ export default function Login() {
         )}
 
         {step === "reset-email" && (
-          <div className="bg-card/50 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl p-8">
+          <div className="glass-modal p-8">
             <Button
               variant="ghost"
               size="sm"
@@ -732,8 +722,8 @@ export default function Login() {
                       <div
                         key={index}
                         data-testid={`reset-code-box-${index}`}
-                        className={`w-12 h-16 border-2 rounded-lg flex items-center justify-center text-2xl ${
-                          error ? "border-destructive" : digit ? "border-primary" : "border-muted-foreground/30"
+                        className={`glass-pin-box w-12 h-16 flex items-center justify-center text-2xl ${
+                          error ? "error" : digit ? "filled" : ""
                         }`}
                       >
                         {digit && <span className="text-2xl">•</span>}
@@ -752,30 +742,30 @@ export default function Login() {
                   )}
                 </div>
 
-                <div className="w-full max-w-md">
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="w-full max-w-[280px]">
+                  <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
                         data-testid={`button-num-${num}`}
                         onClick={() => handleResetCodeNumberClick(num.toString())}
-                        className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                        className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                       >
                         {num}
                       </button>
                     ))}
-                    <div className="h-16"></div>
+                    <div className="aspect-square w-full"></div>
                     <button
                       data-testid="button-num-0"
                       onClick={() => handleResetCodeNumberClick("0")}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                      className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                     >
                       0
                     </button>
                     <button
                       data-testid="button-delete"
                       onClick={handleResetCodeDelete}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 flex items-center justify-center"
+                      className="glass-keypad-btn aspect-square w-full flex items-center justify-center"
                     >
                       <Delete className="w-6 h-6" />
                     </button>
@@ -818,9 +808,7 @@ export default function Login() {
                       <div
                         key={index}
                         data-testid={`pin-box-${index}`}
-                        className={`w-12 h-16 border-2 rounded-lg flex items-center justify-center text-2xl ${
-                          digit ? "border-primary" : "border-muted-foreground/30"
-                        }`}
+                        className={`glass-pin-box w-12 h-16 flex items-center justify-center text-2xl ${digit ? "filled" : ""}`}
                       >
                         {digit && <span className="text-2xl">•</span>}
                       </div>
@@ -828,30 +816,30 @@ export default function Login() {
                   </div>
                 </div>
 
-                <div className="w-full max-w-md">
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="w-full max-w-[280px]">
+                  <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
                         data-testid={`button-num-${num}`}
                         onClick={() => handleResetPinNumberClick(num.toString())}
-                        className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                        className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                       >
                         {num}
                       </button>
                     ))}
-                    <div className="h-16"></div>
+                    <div className="aspect-square w-full"></div>
                     <button
                       data-testid="button-num-0"
                       onClick={() => handleResetPinNumberClick("0")}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                      className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                     >
                       0
                     </button>
                     <button
                       data-testid="button-delete"
                       onClick={handleDelete}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 flex items-center justify-center"
+                      className="glass-keypad-btn aspect-square w-full flex items-center justify-center"
                     >
                       <Delete className="w-6 h-6" />
                     </button>
@@ -894,9 +882,7 @@ export default function Login() {
                       <div
                         key={index}
                         data-testid={`pin-box-${index}`}
-                        className={`w-12 h-16 border-2 rounded-lg flex items-center justify-center text-2xl ${
-                          digit ? "border-primary" : "border-muted-foreground/30"
-                        }`}
+                        className={`glass-pin-box w-12 h-16 flex items-center justify-center text-2xl ${digit ? "filled" : ""}`}
                       >
                         {digit && <span className="text-2xl">•</span>}
                       </div>
@@ -904,30 +890,30 @@ export default function Login() {
                   </div>
                 </div>
 
-                <div className="w-full max-w-md">
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="w-full max-w-[280px]">
+                  <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                       <button
                         key={num}
                         data-testid={`button-num-${num}`}
                         onClick={() => handleResetConfirmNumberClick(num.toString())}
-                        className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                        className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                       >
                         {num}
                       </button>
                     ))}
-                    <div className="h-16"></div>
+                    <div className="aspect-square w-full"></div>
                     <button
                       data-testid="button-num-0"
                       onClick={() => handleResetConfirmNumberClick("0")}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 text-xl font-medium"
+                      className="glass-keypad-btn aspect-square w-full text-xl font-medium"
                     >
                       0
                     </button>
                     <button
                       data-testid="button-delete"
                       onClick={handleDelete}
-                      className="h-16 rounded-lg bg-muted hover-elevate active-elevate-2 flex items-center justify-center"
+                      className="glass-keypad-btn aspect-square w-full flex items-center justify-center"
                     >
                       <Delete className="w-6 h-6" />
                     </button>

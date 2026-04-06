@@ -45,10 +45,25 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
+      // Real-time updates are driven by WebSocket invalidations.
+      // refetchInterval is disabled globally; the WS manager starts a 30s
+      // polling fallback automatically when the socket is disconnected.
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      // Keep existing data visible during background re-fetches so users never
+      // see a loading skeleton when their data is simply being refreshed.
+      // Use isLoading (not isFetching) in components to gate skeleton states.
+      refetchOnWindowFocus: true,
+      // staleTime: 0 means data is always eligible for a background refetch
+      // when a component mounts or the window is focused, but only if there
+      // are active subscribers.  This gives us silent background refresh
+      // without any loading-state flicker because TanStack Query serves the
+      // cached data immediately and refetches in the background.
+      staleTime: 0,
+      // Never throw on network errors — show stale data instead
       retry: false,
+      // Return existing data while background refetch is in flight so the UI
+      // never reverts to a loading state during re-validates.
+      placeholderData: (previousData: unknown) => previousData,
     },
     mutations: {
       retry: false,

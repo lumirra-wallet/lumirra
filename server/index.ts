@@ -12,6 +12,14 @@ const app = express();
 // This allows Express to correctly identify secure connections behind reverse proxies
 if (process.env.NODE_ENV === "production") {
   app.set('trust proxy', 1);
+
+  // Force HTTPS in production — redirect any plain HTTP requests
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.headers['x-forwarded-proto'] === 'http') {
+      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
 }
 
 declare module 'http' {
@@ -41,8 +49,12 @@ if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
   throw new Error("SESSION_SECRET environment variable must be set in production");
 }
 
+// Use a stable dev fallback so sessions survive server restarts during development.
+// In production SESSION_SECRET must be set via environment variable.
+const DEV_SESSION_SECRET = "lumirra-dev-session-secret-stable-2024";
+
 const sessionParser = session({
-  secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+  secret: process.env.SESSION_SECRET || DEV_SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -105,6 +117,31 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
+
+  // In development, prevent the browser from HTTP-caching Vite pre-bundled dep
+  // files. Vite serves them with max-age=31536000,immutable which causes stale
+  // React chunk conflicts when Vite re-optimizes deps mid-session. Intercepting
+  // the setHeader call forces Cache-Control: no-store for every dep response.
+  if (app.get("env") === "development") {
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      const p = req.path;
+      if (
+        p.includes("/node_modules/.vite/deps/") ||
+        p.startsWith("/@fs/") ||
+        p.startsWith("/@vite/") ||
+        p.startsWith("/@react-refresh")
+      ) {
+        const orig = res.setHeader.bind(res) as typeof res.setHeader;
+        (res as any).setHeader = function (name: string, value: any) {
+          if (typeof name === "string" && name.toLowerCase() === "cache-control") {
+            return orig(name, "no-store");
+          }
+          return orig(name, value);
+        };
+      }
+      next();
+    });
+  }
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
