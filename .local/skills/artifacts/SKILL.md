@@ -6,6 +6,8 @@ description: "This project only supports mockup sandbox. Call createArtifact() w
 
 # Artifacts
 
+
+
 **This project only supports mockup sandbox.** Only call `createArtifact()` with `artifactType: "mockup-sandbox"`. Do NOT use any other artifact type.
 
 If the user asks to create any other type of artifact (web app, video, slides, mobile), inform them that:
@@ -13,5 +15,7 @@ If the user asks to create any other type of artifact (web app, video, slides, m
 - This project does not support artifacts.
 - They can create other artifact types by creating a new project.
 - Link: https://replit-add-agent-4-docs.mintlify.app/replitai/artifacts
+
+
 
 

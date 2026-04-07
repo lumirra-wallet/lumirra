@@ -5,7 +5,6 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/contexts/wallet-context";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useTheme } from "@/components/theme-provider";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "react-i18next";
 import { languageCodeToName } from "@/i18n";
@@ -56,7 +54,6 @@ export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { clearWallet, isAuthenticated, isLoading } = useWallet();
-  const { theme, setTheme } = useTheme();
   const { t, i18n } = useTranslation('common');
   
   useEffect(() => {
@@ -65,7 +62,6 @@ export default function Settings() {
     }
   }, [isLoading, isAuthenticated, setLocation]);
   
-  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [cookiesOpen, setCookiesOpen] = useState(false);
   const [siteDataOpen, setSiteDataOpen] = useState(false);
   const [clearDataConfirm, setClearDataConfirm] = useState(false);
@@ -157,11 +153,6 @@ export default function Settings() {
   };
 
 
-  const getThemeDisplay = () => {
-    if (theme === "dark") return t('settings.darkMode');
-    return t('settings.lightMode');
-  };
-
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -207,20 +198,8 @@ export default function Settings() {
         {/* Second Group - Preferences */}
         <div className="bg-card rounded-xl mb-4">
           <button
-            onClick={() => setAppearanceOpen(true)}
-            className="w-full flex items-center justify-between p-4 hover-elevate active-elevate-2 rounded-t-xl border-b border-border"
-            data-testid="button-appearance"
-          >
-            <span className="text-foreground">{t('settings.appearance')}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{getThemeDisplay()}</span>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </button>
-          
-          <button
             onClick={() => setLocation("/settings/currency")}
-            className="w-full flex items-center justify-between p-4 hover-elevate active-elevate-2 border-b border-border"
+            className="w-full flex items-center justify-between p-4 hover-elevate active-elevate-2 rounded-t-xl border-b border-border"
             data-testid="button-fiat-currency"
           >
             <span className="text-foreground">{t('settings.fiatCurrency')}</span>
@@ -477,40 +456,6 @@ export default function Settings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Appearance Dialog */}
-      <Dialog open={appearanceOpen} onOpenChange={setAppearanceOpen}>
-        <DialogContent className="sm:max-w-md" data-testid="dialog-appearance">
-          <DialogHeader>
-            <DialogTitle>{t('settings.appearance')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            <button
-              onClick={() => {
-                setTheme("dark");
-                setAppearanceOpen(false);
-              }}
-              className="w-full flex items-center justify-between p-4 hover-elevate active-elevate-2 rounded-lg"
-              data-testid="option-dark-mode"
-            >
-              <span className="text-foreground">{t('settings.darkMode')}</span>
-              {theme === "dark" && <Check className="h-5 w-5 text-primary" />}
-            </button>
-            
-            <button
-              onClick={() => {
-                setTheme("light");
-                setAppearanceOpen(false);
-              }}
-              className="w-full flex items-center justify-between p-4 hover-elevate active-elevate-2 rounded-lg"
-              data-testid="option-light-mode"
-            >
-              <span className="text-foreground">{t('settings.lightMode')}</span>
-              {theme === "light" && <Check className="h-5 w-5 text-primary" />}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
     </div>
   );

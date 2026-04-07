@@ -137,13 +137,13 @@
 /* ── Glass nav bar (floating pill — visual only, positioning handled by wrapper) ── */
 .glass-nav {
   border-radius: 32px;
-  background: rgba(255, 255, 255, 0.80);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(180, 200, 230, 0.75);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.14),
     0 2px 8px rgba(0, 0, 0, 0.08),
     0 1px 0 rgba(255, 255, 255, 0.9) inset;
-  overflow: visible;
+  overflow: hidden;
 }
 
 @supports (backdrop-filter: blur(1px)) {

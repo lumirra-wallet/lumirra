@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import logoImage from "@assets/Lumirra Logo Design (original)_1761875532047.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -412,12 +413,25 @@ export default function Login() {
               variant="ghost"
               size="sm"
               onClick={() => setLocation("/")}
-              className="mb-6"
+              className="mb-4"
               data-testid="button-back"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
+
+            <div className="flex justify-center mb-5">
+              <img
+                src={logoImage}
+                alt="Lumirra"
+                style={{
+                  width: 64,
+                  height: 64,
+                  objectFit: "contain",
+                  filter: "drop-shadow(0 4px 14px rgba(22,119,255,0.28))",
+                }}
+              />
+            </div>
 
             <h1 className="text-3xl font-bold text-center mb-2">Welcome Back</h1>
             <p className="text-muted-foreground text-center mb-8">

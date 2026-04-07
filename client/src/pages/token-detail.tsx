@@ -265,34 +265,44 @@ export default function TokenDetail() {
           
           {/* Holdings Tab */}
           <TabsContent value="holdings" className="mt-0">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h3 className="text-lg font-semibold" data-testid="text-my-balance">{t('tokenDetail.myBalance')}</h3>
               
-              <div className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-3">
-                  {token.icon && (
-                    <div className="relative w-12 h-12">
-                      <img 
-                        src={token.icon} 
-                        alt={token.name} 
-                        className="w-full h-full rounded-full"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
+              {/* Card border around the balance section */}
+              <div
+                className="rounded-2xl border px-4 py-4"
+                style={{
+                  borderColor: "rgba(22,119,255,0.18)",
+                  background: "rgba(240,247,255,0.60)",
+                  boxShadow: "0 2px 12px rgba(22,119,255,0.06)",
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {token.icon && (
+                      <div className="relative w-12 h-12">
+                        <img 
+                          src={token.icon} 
+                          alt={token.name} 
+                          className="w-full h-full rounded-full"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-semibold text-base" data-testid="text-token-name-balance">{token.name}</p>
+                      <p className="text-sm text-muted-foreground" data-testid="text-token-balance">
+                        {formatBalance(balance)} {token.symbol}
+                      </p>
                     </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-base" data-testid="text-token-name-balance">{token.name}</p>
-                    <p className="text-sm text-muted-foreground" data-testid="text-token-balance">
-                      {formatBalance(balance)} {token.symbol}
-                    </p>
                   </div>
-                </div>
-                
-                <div className="text-right">
-                  <p className="font-semibold text-base" data-testid="text-fiat-value">
-                    {formatUSD(realTimeFiatValue)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">-</p>
+                  
+                  <div className="text-right">
+                    <p className="font-semibold text-base" data-testid="text-fiat-value">
+                      {formatUSD(realTimeFiatValue)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">-</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -505,7 +515,7 @@ export default function TokenDetail() {
           zIndex: 40,
         }}
       >
-        <div className="glass-nav px-3 py-3">
+        <div className="glass-nav px-3 py-3" style={{ border: "2px solid rgba(22,119,255,0.80)", boxShadow: "0 0 0 1px rgba(22,119,255,0.18), 0 8px 32px rgba(0,0,0,0.14)" }}>
           <div className="flex items-center justify-around">
             <button
               className="flex flex-col items-center gap-1.5"

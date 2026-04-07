@@ -56,6 +56,15 @@
     box-sizing: border-box;
   }
 
+  /* ── Hide all scrollbars globally (mobile-native feel) ── */
+  * {
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* IE/Edge */
+  }
+  *::-webkit-scrollbar {
+    display: none;               /* Chrome/Safari/WebKit */
+  }
+
   /* Ensure min-h-screen uses dvh for accurate mobile fullscreen */
   .min-h-screen {
     min-height: 100dvh !important;

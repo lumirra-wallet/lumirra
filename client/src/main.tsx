@@ -71,7 +71,6 @@ if (!rootElement) {
 }
 
 // Once React has rendered its first frame, fade out the pure-HTML splash.
-// The React SplashScreen component takes over from here with the same visuals.
 function dismissHtmlSplash() {
   const el = document.getElementById("html-splash");
   if (!el) return;

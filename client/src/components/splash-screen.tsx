@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import logoImage from "@assets/Lumirra Logo Design (original)_1761875532047.png";
-import { useTheme } from "@/components/theme-provider";
 
-// Bump this string whenever the splash animation changes — forces all users
-// to see the updated full-branded splash on their next app open.
-export const SPLASH_ANIMATION_VERSION = "fb-dots-v7";
+export const SPLASH_ANIMATION_VERSION = "fb-dots-v10";
 
 interface SplashScreenProps {
   onDone: () => void;
@@ -13,28 +10,15 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
   const [fading, setFading] = useState(false);
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
 
-  // Theme-aware colors
-  const bg          = isDark ? "hsl(222,85%,6%)"       : "hsl(218,60%,97%)";
-  const dotIdle     = isDark ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.13)";
-  const dotActive   = isDark ? "hsl(210,100%,56%)"     : "hsl(210,100%,44%)";
-  const logoShadow  = isDark
-    ? "drop-shadow(0 6px 22px rgba(255,255,255,0.28))"
-    : "drop-shadow(0 6px 18px rgba(0,0,0,0.28))";
+  const bg         = "hsl(218,60%,97%)";
+  const dotIdle    = "rgba(0,0,0,0.12)";
+  const dotActive  = "hsl(210,100%,44%)";
 
   useEffect(() => {
-    const duration = minimal ? 700 : 1600;
-
-    const fadeTimer = setTimeout(() => {
-      setFading(true);
-    }, duration);
-
-    const doneTimer = setTimeout(() => {
-      onDone();
-    }, duration + 400);
-
+    const duration = minimal ? 700 : 1800;
+    const fadeTimer = setTimeout(() => setFading(true), duration);
+    const doneTimer = setTimeout(() => onDone(), duration + 400);
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(doneTimer);
@@ -57,72 +41,97 @@ export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
         pointerEvents: fading ? "none" : "all",
       }}
     >
+      {/* Center: Logo + dots */}
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 28,
+          gap: 0,
           animation: "splash-enter 0.55s cubic-bezier(0.22,1,0.36,1) both",
         }}
       >
+        {/* Logo */}
         <img
           src={logoImage}
           alt="Lumirra"
           style={{
-            width: minimal ? 56 : 76,
-            height: minimal ? 56 : 76,
+            width: minimal ? 60 : 80,
+            height: minimal ? 60 : 80,
             objectFit: "contain",
-            filter: logoShadow,
+            filter: "drop-shadow(0 6px 22px rgba(22,119,255,0.35)) drop-shadow(0 2px 6px rgba(0,0,0,0.18))",
+            marginBottom: 20,
           }}
         />
 
-        <DotsRow cycleSeconds={1.4} dotIdle={dotIdle} dotActive={dotActive} />
+        {/* Animated dots */}
+        <DotsRow dotIdle={dotIdle} dotActive={dotActive} />
+      </div>
+
+      {/* Bottom: Brand name */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 48,
+          left: 0,
+          right: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          animation: "splash-enter 0.55s cubic-bezier(0.22,1,0.36,1) 0.15s both",
+        }}
+      >
+        <span
+          style={{
+            fontSize: minimal ? 22 : 26,
+            fontWeight: 900,
+            letterSpacing: "0.03em",
+            color: "#1a2a4a",
+            textShadow: "0 3px 16px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.14)",
+            fontFamily: "inherit",
+          }}
+        >
+          Lumirra Wallet
+        </span>
+        {/* Dark shadow band below text */}
+        <div
+          style={{
+            width: 130,
+            height: 6,
+            marginTop: 6,
+            background: "radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.18) 0%, transparent 80%)",
+            borderRadius: "50%",
+          }}
+        />
       </div>
 
       <style>{`
         @keyframes splash-enter {
-          from { opacity: 0; transform: scale(0.86); }
-          to   { opacity: 1; transform: scale(1); }
+          from { opacity: 0; transform: scale(0.88) translateY(10px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes fb-dot {
-          0%, 55%, 100% {
-            transform: scale(0.7);
-            background: ${dotIdle};
-          }
-          27% {
-            transform: scale(1.25);
-            background: ${dotActive};
-          }
+          0%, 55%, 100% { transform: scale(0.7); background: ${dotIdle}; }
+          27% { transform: scale(1.25); background: ${dotActive}; }
         }
       `}</style>
     </div>
   );
 }
 
-function DotsRow({
-  count = 5,
-  cycleSeconds = 1.4,
-  dotIdle,
-  dotActive: _dotActive,
-}: {
-  count?: number;
-  cycleSeconds?: number;
-  dotIdle: string;
-  dotActive: string;
-}) {
-  const step = cycleSeconds / count;
+const CYCLE = 1.4;
+const COUNT = 5;
+
+function DotsRow({ dotIdle, dotActive: _ }: { dotIdle: string; dotActive: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-      {Array.from({ length: count }).map((_, i) => (
+      {Array.from({ length: COUNT }).map((_, i) => (
         <div
           key={i}
           style={{
-            width: 9,
-            height: 9,
-            borderRadius: "50%",
+            width: 9, height: 9, borderRadius: "50%",
             background: dotIdle,
-            animation: `fb-dot ${cycleSeconds}s ease-in-out ${(i * step).toFixed(2)}s infinite`,
+            animation: `fb-dot ${CYCLE}s ease-in-out ${((i * CYCLE) / COUNT).toFixed(2)}s infinite`,
           }}
         />
       ))}

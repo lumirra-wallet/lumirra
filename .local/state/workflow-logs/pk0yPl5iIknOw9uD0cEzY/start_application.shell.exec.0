@@ -1,0 +1,539 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K[Email Service] SMTP initialized
+[Email Service] SMTP Host: smtp.hostinger.com
+[Email Service] SMTP Port: 465
+[Email Service] From address: Support@lumirrawallet.com
+[Email Service] Resend initialized (primary or fallback)
+(node:1498) [MONGOOSE] Warning: Duplicate schema index on {"userId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Connected to MongoDB successfully
+Admin password updated successfully
+Cleared 0 swap history entries
+[Migration] Set default displayOrder for 13 token types (0 tokens updated)
+[Migration] Hidden 0 non-default tokens
+[Background Job] Starting background jobs...
+[Background Job] Background jobs started successfully
+WebSocket service initialized
+WebSocket service initialized for real-time support chat
+3:51:37 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[Background Job] Fetching crypto news...
+[Background Job] CryptoPanic API error: Not Found
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:51:45 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mindex.html[22m
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+[Background Job] Checking market movements...
+[CoinGecko] Fetching prices for 8 coins from: https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,solana,tron,dogecoin,cardano,ripple&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 8 coins
+[Background Job] Market movement check complete — 0 coin(s) notified
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m3:51:58 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mindex.html[22m [33m(x2)[39m
+3:56:13 PM [express] GET /api/auth/user 401 in 3ms :: {"error":"Authentication required"}
+3:56:13 PM [express] GET /api/fees/BTCB 401 in 1ms :: {"error":"Authentication required"}
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+3:56:13 PM [express] GET /api/chains 304 in 107ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+3:56:13 PM [express] GET /api/prices 200 in 127ms :: {"0x":{"usd":0.099961,"usd_market_cap":84806786…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+3:56:13 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 323ms :: {"tokens":[…
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+3:57:00 PM [express] GET /api/user 200 in 13ms
+3:57:00 PM [express] GET /api/auth/user 401 in 2ms :: {"error":"Authentication required"}
+3:57:00 PM [express] GET /api/chains 304 in 107ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+WebSocket upgrade request received for /ws
+WebSocket upgrade rejected: no session
+3:58:00 PM [express] POST /api/auth/login-pin 200 in 298ms :: {"user":{"id":"690e62cb619ffa9fddf566a…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+3:58:01 PM [express] GET /api/chains 304 in 108ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[CoinGecko] Successfully fetched prices for 52 coins
+3:58:01 PM [express] GET /api/prices 200 in 121ms :: {"0x":{"usd":0.100045,"usd_market_cap":84806786…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+3:58:26 PM [express] GET /api/user 200 in 6ms
+3:58:26 PM [express] GET /api/chains 200 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+3:58:26 PM [express] GET /api/auth/user 200 in 213ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+WebSocket upgrade request received for /ws
+WebSocket connected: userId=690e62cb619ffa9fddf566a5, role=user
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+3:58:27 PM [express] GET /api/prices 200 in 64ms :: {"0x":{"usd":0.100045,"usd_market_cap":84806786.…
+3:58:27 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+3:58:27 PM [express] GET /api/notifications/unread-count 200 in 107ms :: {"count":0}
+3:58:27 PM [express] GET /api/support-chat/unread-count 200 in 107ms :: {"unreadCount":0}
+3:58:27 PM [express] GET /api/auth/user 304 in 215ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+3:58:27 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 200 in 318ms :: {"tokens":[{…
+3:58:37 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+3:58:48 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+3:58:58 PM [express] GET /api/notifications/unread-count 304 in 109ms :: {"count":0}
+3:59:09 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+3:59:19 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+WebSocket disconnected: userId=690e62cb619ffa9fddf566a5
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+[Background Job] Fetching crypto news...
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+[Background Job] CryptoPanic API error: Not Found
+4:08:20 PM [express] GET /api/user 200 in 5ms
+4:08:20 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:08:20 PM [express] GET /api/auth/user 304 in 212ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+4:08:21 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:08:21 PM [express] GET /api/support-chat/unread-count 304 in 107ms :: {"unreadCount":0}
+4:08:21 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+4:08:21 PM [express] GET /api/auth/user 304 in 212ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:08:21 PM [express] GET /api/prices 200 in 136ms :: {"0x":{"usd":0.100268,"usd_market_cap":85092882…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:08:21 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 317ms :: {"tokens":[{…
+WebSocket upgrade request received for /ws
+WebSocket connected: userId=690e62cb619ffa9fddf566a5, role=user
+4:08:22 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:08:32 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:08:43 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:08:51 PM [express] GET /api/prices 304 in 65ms :: {"0x":{"usd":0.100268,"usd_market_cap":85092882.…
+4:08:51 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+4:08:51 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:08:51 PM [express] GET /api/support-chat/unread-count 304 in 106ms :: {"unreadCount":0}
+4:08:51 PM [express] GET /api/auth/user 304 in 211ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:08:51 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 318ms :: {"tokens":[{…
+WebSocket disconnected: userId=690e62cb619ffa9fddf566a5
+4:09:21 PM [express] GET /api/user 200 in 7ms
+4:09:21 PM [express] GET /api/chains 304 in 108ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:09:21 PM [express] GET /api/auth/user 304 in 211ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+4:09:22 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:09:22 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:09:22 PM [express] GET /api/support-chat/unread-count 304 in 105ms :: {"unreadCount":0}
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:09:22 PM [express] GET /api/prices 200 in 123ms :: {"0x":{"usd":0.100184,"usd_market_cap":84998858…
+4:09:22 PM [express] GET /api/auth/user 304 in 210ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:09:22 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 317ms :: {"tokens":[{…
+WebSocket upgrade request received for /ws
+WebSocket connected: userId=690e62cb619ffa9fddf566a5, role=user
+4:09:23 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:09:33 PM [express] GET /api/notifications/unread-count 304 in 252ms :: {"count":0}
+4:09:44 PM [express] GET /api/notifications/unread-count 304 in 108ms :: {"count":0}
+4:09:54 PM [express] GET /api/notifications/unread-count 304 in 108ms :: {"count":0}
+4:10:05 PM [express] GET /api/notifications/unread-count 304 in 108ms :: {"count":0}
+4:10:15 PM [express] GET /api/notifications/unread-count 304 in 108ms :: {"count":0}
+4:10:22 PM [express] GET /api/support-chat/unread-count 304 in 108ms :: {"unreadCount":0}
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:23 PM [express] GET /api/prices 200 in 140ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858…
+4:10:26 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+4:10:36 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+4:10:45 PM [express] GET /api/notifications/unread-count 304 in 108ms :: {"count":0}
+4:10:45 PM [express] GET /api/support-chat/unread-count 304 in 108ms :: {"unreadCount":0}
+4:10:45 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:46 PM [express] GET /api/auth/user 304 in 212ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:46 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 315ms :: {"tokens":[{…
+4:10:47 PM [express] GET /api/chains 304 in 105ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:47 PM [express] GET /api/auth/user 304 in 210ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:10:47 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 315ms :: {"tokens":[…
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:47 PM [express] GET /api/prices 304 in 1543ms :: {"0x":{"usd":0.100203,"usd_market_cap":8499885…
+4:10:47 PM [express] GET /api/fees/BTCB 304 in 106ms :: {"dynamic":true,"tokenSymbol":"BTCB","chainI…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:48 PM [express] GET /api/prices 304 in 66ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:48 PM [express] GET /api/auth/user 304 in 229ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:48 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 315ms :: {"tokens":[{…
+4:10:48 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:48 PM [express] GET /api/notifications/unread-count 304 in 105ms :: {"count":0}
+4:10:48 PM [express] GET /api/support-chat/unread-count 304 in 107ms :: {"unreadCount":0}
+4:10:49 PM [express] GET /api/news 200 in 1009ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly9jcnlw",…
+4:10:49 PM [express] GET /api/auth/user 304 in 212ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:49 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 317ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:49 PM [express] GET /api/prices 304 in 39ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:51 PM [express] GET /api/prices 304 in 28ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:52 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:10:52 PM [express] GET /api/support-chat/unread-count 304 in 107ms :: {"unreadCount":0}
+4:10:52 PM [express] GET /api/chains 304 in 108ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:52 PM [express] GET /api/auth/user 304 in 214ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:52 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 314ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:53 PM [express] GET /api/prices 304 in 23ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:53 PM [express] GET /api/support-chat/unread-count 304 in 107ms :: {"unreadCount":0}
+4:10:53 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+4:10:53 PM [express] GET /api/chains 304 in 105ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:53 PM [express] GET /api/auth/user 304 in 213ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:53 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 315ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:55 PM [express] GET /api/prices 304 in 30ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:55 PM [express] GET /api/auth/user 304 in 211ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:55 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 317ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:55 PM [express] GET /api/prices 304 in 27ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:55 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:56 PM [express] GET /api/news 304 in 980ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly9jcnlw","…
+4:10:56 PM [express] GET /api/auth/user 304 in 215ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:10:56 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 326ms :: {"tokens":[…
+4:10:56 PM [express] GET /api/fees/BTCB 304 in 107ms :: {"dynamic":true,"tokenSymbol":"BTCB","chainI…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:56 PM [express] GET /api/prices 304 in 30ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:56 PM [express] GET /api/support-chat/unread-count 304 in 106ms :: {"unreadCount":0}
+4:10:56 PM [express] GET /api/chains 304 in 104ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:56 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:10:56 PM [express] GET /api/auth/user 304 in 209ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:57 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 317ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:57 PM [express] GET /api/prices 304 in 25ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+Error fetching CryptoSlate: Error: Status code 403
+    at ClientRequest.<anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4mrss-parser[24m/lib/parser.js:88:25[90m)[39m
+[90m    at Object.onceWrapper (node:events:639:26)[39m
+[90m    at ClientRequest.emit (node:events:524:28)[39m
+[90m    at HTTPParser.parserOnIncomingClient [as onIncoming] (node:_http_client:702:27)[39m
+[90m    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)[39m
+[90m    at TLSSocket.socketOnData (node:_http_client:544:22)[39m
+[90m    at TLSSocket.emit (node:events:524:28)[39m
+[90m    at addChunk (node:internal/streams/readable:561:12)[39m
+[90m    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)[39m
+[90m    at Readable.push (node:internal/streams/readable:392:5)[39m
+[90m    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)[39m
+4:10:57 PM [express] GET /api/news 200 in 156ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly93d3cu","…
+4:10:57 PM [express] GET /api/auth/user 304 in 214ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:57 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 320ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:58 PM [express] GET /api/prices 304 in 24ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:58 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:58 PM [express] GET /api/fees/BTCB 304 in 106ms :: {"dynamic":true,"tokenSymbol":"BTCB","chainI…
+4:10:58 PM [express] GET /api/auth/user 304 in 211ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:10:58 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 320ms :: {"tokens":[…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:58 PM [express] GET /api/prices 304 in 26ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:10:59 PM [express] GET /api/support-chat/unread-count 304 in 108ms :: {"unreadCount":0}
+4:10:59 PM [express] GET /api/chains 304 in 107ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:10:59 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:10:59 PM [express] GET /api/auth/user 304 in 211ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:10:59 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 319ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:10:59 PM [express] GET /api/prices 304 in 28ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+Error fetching CryptoSlate: Error: Status code 403
+    at ClientRequest.<anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4mrss-parser[24m/lib/parser.js:88:25[90m)[39m
+[90m    at Object.onceWrapper (node:events:639:26)[39m
+[90m    at ClientRequest.emit (node:events:524:28)[39m
+[90m    at HTTPParser.parserOnIncomingClient [as onIncoming] (node:_http_client:702:27)[39m
+[90m    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)[39m
+[90m    at TLSSocket.socketOnData (node:_http_client:544:22)[39m
+[90m    at TLSSocket.emit (node:events:524:28)[39m
+[90m    at addChunk (node:internal/streams/readable:561:12)[39m
+[90m    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)[39m
+[90m    at Readable.push (node:internal/streams/readable:392:5)[39m
+[90m    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)[39m
+4:11:00 PM [express] GET /api/news 304 in 169ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly93d3cu","…
+4:11:00 PM [express] GET /api/auth/user 304 in 211ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:00 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 318ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:00 PM [express] GET /api/prices 304 in 31ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:00 PM [express] GET /api/chains 304 in 107ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:11:00 PM [express] GET /api/fees/BTCB 304 in 107ms :: {"dynamic":true,"tokenSymbol":"BTCB","chainI…
+4:11:00 PM [express] GET /api/auth/user 304 in 211ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:11:00 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 319ms :: {"tokens":[…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:01 PM [express] GET /api/prices 304 in 28ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:01 PM [express] GET /api/chains 304 in 107ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:11:01 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+4:11:01 PM [express] GET /api/support-chat/unread-count 304 in 105ms :: {"unreadCount":0}
+4:11:01 PM [express] GET /api/auth/user 304 in 209ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:01 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 314ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:02 PM [express] GET /api/prices 304 in 31ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:02 PM [express] GET /api/auth/user 304 in 210ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:02 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 314ms :: {"tokens":[{…
+4:11:03 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:11:03 PM [express] GET /api/support-chat/unread-count 304 in 106ms :: {"unreadCount":0}
+4:11:03 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:11:03 PM [express] GET /api/auth/user 304 in 214ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:03 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 319ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:03 PM [express] GET /api/prices 304 in 28ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:03 PM [express] GET /api/news 200 in 1762ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly9jcnlw",…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:04 PM [express] GET /api/prices 304 in 24ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:04 PM [express] GET /api/auth/user 304 in 212ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:04 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 315ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:05 PM [express] GET /api/prices 304 in 26ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:05 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:11:05 PM [express] GET /api/fees/BTCB 304 in 105ms :: {"dynamic":true,"tokenSymbol":"BTCB","chainI…
+4:11:05 PM [express] GET /api/auth/user 304 in 212ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:11:06 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 316ms :: {"tokens":[…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:07 PM [express] GET /api/prices 304 in 31ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:07 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:11:07 PM [express] GET /api/support-chat/unread-count 304 in 107ms :: {"unreadCount":0}
+4:11:07 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+4:11:07 PM [express] GET /api/auth/user 304 in 214ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:07 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 317ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+4:11:12 PM [express] GET /api/chart/tether 200 in 63ms :: {"prices":[[1775491850757,0.99996553372738…
+4:11:12 PM [express] GET /api/chains 304 in 108ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:11:12 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 316ms :: {"tokens":[…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:12 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 317ms :: {"tokens":[{…
+4:11:13 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/transactions 304 in 423ms :: [{"_id":"…
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:13 PM [express] GET /api/prices 304 in 453ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858…
+4:11:13 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:11:14 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 314ms :: {"tokens":[…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:14 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 320ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:15 PM [express] GET /api/prices 304 in 31ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:16 PM [express] GET /api/chart/tether 200 in 111ms :: {"prices":[[1775491850757,0.9999655337273…
+4:11:16 PM [express] GET /api/chains 304 in 107ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+4:11:16 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 344ms :: {"tokens":[…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:16 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 345ms :: {"tokens":[{…
+4:11:16 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/transactions 304 in 425ms :: [{"_id":"…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:22 PM [express] GET /api/prices 304 in 55ms :: {"0x":{"usd":0.100203,"usd_market_cap":84998858.…
+4:11:22 PM [express] GET /api/chains 304 in 109ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:11:22 PM [express] GET /api/notifications/unread-count 304 in 107ms :: {"count":0}
+4:11:22 PM [express] GET /api/support-chat/unread-count 304 in 108ms :: {"unreadCount":0}
+4:11:22 PM [express] GET /api/auth/user 304 in 210ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:22 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 316ms :: {"tokens":[{…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+Error fetching CryptoSlate: Error: Status code 403
+    at ClientRequest.<anonymous> [90m(/home/runner/workspace/[39mnode_modules/[4mrss-parser[24m/lib/parser.js:88:25[90m)[39m
+[90m    at Object.onceWrapper (node:events:639:26)[39m
+[90m    at ClientRequest.emit (node:events:524:28)[39m
+[90m    at HTTPParser.parserOnIncomingClient [as onIncoming] (node:_http_client:702:27)[39m
+[90m    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)[39m
+[90m    at TLSSocket.socketOnData (node:_http_client:544:22)[39m
+[90m    at TLSSocket.emit (node:events:524:28)[39m
+[90m    at addChunk (node:internal/streams/readable:561:12)[39m
+[90m    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)[39m
+[90m    at Readable.push (node:internal/streams/readable:392:5)[39m
+[90m    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)[39m
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:25 PM [express] GET /api/prices 200 in 77ms :: {"0x":{"usd":0.100202,"usd_market_cap":84998858.…
+4:11:25 PM [express] GET /api/news 200 in 179ms :: {"count":50,"results":[{"id":"aHR0cHM6Ly93d3cu","…
+4:11:25 PM [express] GET /api/auth/user 304 in 210ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:25 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 315ms :: {"tokens":[{…
+4:11:26 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+4:11:26 PM [express] GET /api/support-chat/unread-count 304 in 107ms :: {"unreadCount":0}
+4:11:26 PM [express] GET /api/notifications/unread-count 304 in 109ms :: {"count":0}
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:26 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 319ms :: {"tokens":[{…
+4:11:26 PM [express] GET /api/auth/user 304 in 214ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:11:28 PM [express] GET /api/prices 304 in 30ms :: {"0x":{"usd":0.100202,"usd_market_cap":84998858.…
+4:11:28 PM [express] GET /api/chart/tether 304 in 61ms :: {"prices":[[1775491850757,0.99996553372738…
+4:11:28 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[All Tokens API] Wallet 690e62cb619ffa9fddf566a7: Found 66 total tokens
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:11:28 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/all-tokens 304 in 321ms :: {"tokens":[…
+4:11:28 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 319ms :: {"tokens":[{…
+4:11:28 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/transactions 304 in 425ms :: [{"_id":"…
+[Background Job] Checking price alerts...
+[Background Job] No active alerts to check
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:12:28 PM [express] GET /api/prices 200 in 108ms :: {"0x":{"usd":0.10025,"usd_market_cap":84998858.…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:13:30 PM [express] GET /api/prices 200 in 133ms :: {"0x":{"usd":0.100107,"usd_market_cap":84998858…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:14:31 PM [express] GET /api/prices 200 in 114ms :: {"0x":{"usd":0.100071,"usd_market_cap":84998858…
+[CoinGecko] Fetching prices for 53 coins from: https://api.coingecko.com/api/v3/simple/price?ids=ethereum,tether,usd-coin,dai,binance-usd,uniswap,chainlink,aave,maker,compound-governance-token,curve-dao-token,sushi,synthetix-network-token,yearn-finance,wrapped-bitcoin,weth,leo-token,huobi-token,okb,matic-network,lido-dao,shiba-inu,pepe,floki,the-sandbox,decentraland,axie-infinity,apecoin,the-graph,fantom,1inch,ethereum-name-service,basic-attention-token,0x,binancecoin,pancakeswap-token,venus,alpha-finance,bitcoin,cardano,dogecoin,tron,just-stablecoin,just,sun-token,wink,apenft,solana,jupiter-exchange-solana,raydium,orca,bonk,dogwifcoin&vs_currencies=usd,jpy,cad,gbp,aed,aud,krw,chf,czk,dkk,nok,nzd&include_24hr_change=true&include_market_cap=true
+4:15:27 PM [express] GET /api/chains 304 in 106ms :: [{"_id":"69091c943129bb9cda7e839c","id":"bnb","…
+[CoinGecko] Response status: 200 OK
+[CoinGecko] Successfully fetched prices for 52 coins
+4:15:27 PM [express] GET /api/prices 304 in 58ms :: {"0x":{"usd":0.100071,"usd_market_cap":84998858.…
+4:15:27 PM [express] GET /api/support-chat/unread-count 304 in 107ms :: {"unreadCount":0}
+4:15:27 PM [express] GET /api/notifications/unread-count 304 in 108ms :: {"count":0}
+4:15:27 PM [express] GET /api/auth/user 304 in 214ms :: {"_id":"690e62cb619ffa9fddf566a5","userId":"…
+[Portfolio API] Wallet 690e62cb619ffa9fddf566a7: Found 13 visible tokens out of 66 total
+4:15:27 PM [express] GET /api/wallet/690e62cb619ffa9fddf566a7/portfolio 304 in 316ms :: {"tokens":[{…
+4:15:38 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}
+4:15:48 PM [express] GET /api/notifications/unread-count 304 in 109ms :: {"count":0}
+4:15:59 PM [express] GET /api/notifications/unread-count 304 in 106ms :: {"count":0}

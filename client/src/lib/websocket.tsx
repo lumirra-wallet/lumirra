@@ -171,8 +171,14 @@ class WebSocketManager {
         queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
         // Play sound on any page — use the shared primed audio via sound.ts
         this.playNotificationSound();
-        // Also show a system (OS-level) notification when the user is on a different tab
+        // Show OS-level notification when the user is on a different tab/window
         this.showSystemNotification(message);
+        // Dispatch in-app event so WebView (and any active page) can show a toast
+        try {
+          window.dispatchEvent(new CustomEvent("lumirra:notification", {
+            detail: { title: message.title, body: message.body },
+          }));
+        } catch {}
         break;
       case "transaction_created":
       case "transaction_updated":

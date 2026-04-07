@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Switch, Route, useLocation } from "wouter";
+import logoImage from "@assets/Lumirra Logo Design (original)_1761875532047.png";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WalletProvider } from "@/contexts/wallet-context";
@@ -79,6 +81,61 @@ import AdminWithdrawalApprovals from "@/pages/admin-withdrawal-approvals";
 function BackButtonHandler() {
   useBackButton();
   return null;
+}
+
+function InAppNotificationListener() {
+  const { toast } = useToast();
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { title, body } = (e as CustomEvent<{ title?: string; body?: string }>).detail || {};
+      toast({
+        title: title || "New Notification",
+        description: body,
+        duration: 5000,
+      });
+    };
+    window.addEventListener("lumirra:notification", handler);
+    return () => window.removeEventListener("lumirra:notification", handler);
+  }, [toast]);
+  return null;
+}
+
+function DesktopBlock() {
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 480);
+  useEffect(() => {
+    const handler = () => setIsDesktop(window.innerWidth > 480);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  if (!isDesktop) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2147483647,
+        background: "hsl(218,60%,97%)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 24,
+        padding: 32,
+        textAlign: "center",
+        fontFamily: "inherit",
+      }}
+    >
+      <img src={logoImage} alt="Lumirra" style={{ width: 80, height: 80, objectFit: "contain" }} />
+      <div>
+        <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "#1a1a2e" }}>
+          Mobile Only
+        </h2>
+        <p style={{ margin: 0, fontSize: 15, color: "#64748b", maxWidth: 280 }}>
+          Lumirra is designed for mobile devices. Please open this app on your phone or tablet.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function ConditionalProviders() {
@@ -168,8 +225,8 @@ function ConditionalProviders() {
 function App() {
   // Splash screen strategy:
   //  • Animation version changed: always show full splash, even mid-session.
-  //  • First open of the day: show the full branded splash.
-  //  • Any page load / reload (same day): show a minimal splash to cover blank screen.
+  //  • First open of the day OR new version: show the full branded splash.
+  //  • Same-day reloads/refreshes in same session: skip entirely.
   //  • In-tab route navigation (no page reload): skip — app is already rendered.
   const [splashType, setSplashType] = useState<"full" | "minimal" | null>(() => {
     try {
@@ -183,15 +240,10 @@ function App() {
         return "full";
       }
 
-      // Detect whether this is a hard page load / reload (F5, Ctrl+R, direct URL)
-      // vs. an in-app route navigation. Reloads always need at least a minimal splash
-      // to cover the blank screen while assets are being fetched.
-      const navEntry = performance?.getEntriesByType?.("navigation")?.[0] as PerformanceNavigationTiming | undefined;
-      const isPageLoad = !navEntry || navEntry.type === "navigate" || navEntry.type === "reload" || navEntry.type === "back_forward";
       const sessionSeen = !!sessionStorage.getItem("__lumirra_splash_shown__");
 
-      // In-tab route navigation that already showed a splash → skip entirely
-      if (sessionSeen && !isPageLoad) return null;
+      // Already showed a splash in this session (including reloads) → skip
+      if (sessionSeen) return null;
 
       const storedDate = localStorage.getItem("__lumirra_splash_date__");
       // First open of today → full branded splash
@@ -213,6 +265,15 @@ function App() {
     } catch {}
     setSplashType(null);
   }, []);
+
+  // Safety net: if splash is still showing after 5 seconds, force-dismiss it.
+  // This prevents any edge-case bug (timer cancellation, re-render race, etc.)
+  // from leaving the splash on screen forever.
+  useEffect(() => {
+    if (splashType === null) return;
+    const maxTimer = setTimeout(() => setSplashType(null), 5000);
+    return () => clearTimeout(maxTimer);
+  }, [splashType]);
 
   useEffect(() => {
     try {
@@ -236,10 +297,12 @@ function App() {
       <WebSocketProvider>
         <ThemeProvider>
           <TooltipProvider>
+            <DesktopBlock />
             {splashType && <SplashScreen onDone={handleSplashDone} minimal={splashType === "minimal"} />}
             <OfflineScreen />
             <CookieConsent />
             <BackButtonHandler />
+            <InAppNotificationListener />
             <Toaster />
             <ConditionalProviders />
           </TooltipProvider>
