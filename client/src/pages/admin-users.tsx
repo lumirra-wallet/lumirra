@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Copy, Check, ChevronDown, ChevronUp, Pin, PinOff, Tag } from "lucide-react";
+import { Loader2, Copy, Check, ChevronDown, ChevronUp, Pin, PinOff, Tag, Search, X, Bell, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -19,6 +19,12 @@ export default function AdminUsers() {
   const [copiedUserIdFor, setCopiedUserIdFor] = useState<string | null>(null);
   const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set());
   const [nicknameEdits, setNicknameEdits] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [togglingAlertFor, setTogglingAlertFor] = useState<string | null>(null);
+  const [savingAlertFor, setSavingAlertFor] = useState<string | null>(null);
+  const [alertMessageEdits, setAlertMessageEdits] = useState<Record<string, string>>({});
+  const [alertDurationValueEdits, setAlertDurationValueEdits] = useState<Record<string, number>>({});
+  const [alertDurationUnitEdits, setAlertDurationUnitEdits] = useState<Record<string, string>>({});
 
   const handleCopyUserId = (uid: string, mongoId: string) => {
     navigator.clipboard.writeText(uid);
@@ -53,6 +59,18 @@ export default function AdminUsers() {
   });
 
   const pinnedCount = allUsers.filter((u: any) => u.adminPinned).length;
+
+  const filteredUsers = searchQuery.trim()
+    ? allUsers.filter((u: any) => {
+        const q = searchQuery.trim().toLowerCase();
+        return (
+          (u.email || "").toLowerCase().includes(q) ||
+          (u.adminNickname || "").toLowerCase().includes(q) ||
+          (u.userId || "").includes(q) ||
+          (`${u.firstName || ""} ${u.lastName || ""}`.trim().toLowerCase()).includes(q)
+        );
+      })
+    : allUsers;
 
   const togglePinMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -136,6 +154,7 @@ export default function AdminUsers() {
   };
 
   const [togglingFeeMethodFor, setTogglingFeeMethodFor] = useState<string | null>(null);
+  const [togglingForceMaxFor, setTogglingForceMaxFor] = useState<string | null>(null);
 
   const toggleSendPermissionMutation = useMutation({
     mutationFn: async ({ userId, canSendCrypto }: { userId: string; canSendCrypto: boolean }) => {
@@ -184,6 +203,87 @@ export default function AdminUsers() {
     },
   });
 
+  const toggleForceMaxAmountMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      setTogglingForceMaxFor(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/force-max-amount`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setTogglingForceMaxFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: data?.forceMaxAmount ? "Force Max Amount enabled" : "Force Max Amount disabled",
+        description: "Saved to database.",
+      });
+    },
+    onError: (error: Error) => {
+      setTogglingForceMaxFor(null);
+      toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const toggleAlertMutation = useMutation({
+    mutationFn: async ({ userId, enabled }: { userId: string; enabled: boolean }) => {
+      setTogglingAlertFor(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/alert`, { alertEnabled: enabled });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setTogglingAlertFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: data?.alertEnabled ? "Alert enabled" : "Alert disabled",
+        description: "Setting saved.",
+      });
+    },
+    onError: (error: Error) => {
+      setTogglingAlertFor(null);
+      toast({ title: "Failed to update alert", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const saveAlertSettingsMutation = useMutation({
+    mutationFn: async ({ userId, alertMessage, alertDeadline }: { userId: string; alertMessage: string; alertDeadline: number | null }) => {
+      setSavingAlertFor(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/alert`, { alertMessage, alertDeadline });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to save");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setSavingAlertFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "Alert settings saved", description: "Message and countdown deadline updated." });
+    },
+    onError: (error: Error) => {
+      setSavingAlertFor(null);
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const clearDeadlineMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/alert`, { alertDeadline: null });
+      if (!res.ok) throw new Error("Failed to clear");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "Countdown cleared", description: "Account lock timer removed." });
+    },
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       setDeletingUserId(userId);
@@ -221,18 +321,46 @@ export default function AdminUsers() {
       <div className="p-4">
         <Card>
           <CardHeader className="py-3">
-            <CardTitle className="text-base">All Users</CardTitle>
-            <CardDescription className="text-xs">
-              {allUsers.length} user{allUsers.length !== 1 ? "s" : ""} total
-              {pinnedCount > 0 && ` · ${pinnedCount} pinned`}
-            </CardDescription>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <CardTitle className="text-base">All Users</CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  {searchQuery.trim()
+                    ? `${filteredUsers.length} of ${allUsers.length} users`
+                    : `${allUsers.length} user${allUsers.length !== 1 ? "s" : ""} total${pinnedCount > 0 ? ` · ${pinnedCount} pinned` : ""}`}
+                </CardDescription>
+              </div>
+            </div>
+            {/* Search bar */}
+            <div className="relative mt-2">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search by email, name, tag or ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                data-testid="input-search-users"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  data-testid="button-clear-search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="py-2 px-3">
             {allUsers.length === 0 ? (
               <p className="text-center text-muted-foreground py-6 text-sm">No users found</p>
+            ) : filteredUsers.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6 text-sm">No users match your search</p>
             ) : (
               <div className="space-y-2">
-                {allUsers.map((user: any) => {
+                {filteredUsers.map((user: any) => {
                   const isPinned = !!user.adminPinned;
                   const isAssetsExpanded = expandedAssets.has(user._id);
                   const displayName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
@@ -424,6 +552,23 @@ export default function AdminUsers() {
                             ) : user.useFixedFee ? "On" : "Off"}
                           </Button>
 
+                          <span className="text-xs text-muted-foreground">Force Max:</span>
+                          <Button
+                            size="sm"
+                            variant={user.forceMaxAmount ? "secondary" : "outline"}
+                            className={`h-7 text-xs ${user.forceMaxAmount ? "bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30" : ""}`}
+                            disabled={togglingForceMaxFor === user._id}
+                            onClick={() => {
+                              if (togglingForceMaxFor) return;
+                              toggleForceMaxAmountMutation.mutate(user._id);
+                            }}
+                            data-testid={`button-toggle-force-max-${user._id}`}
+                          >
+                            {togglingForceMaxFor === user._id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : user.forceMaxAmount ? "On" : "Off"}
+                          </Button>
+
                           {!user.isAdmin && (
                             <Button
                               size="sm"
@@ -439,6 +584,117 @@ export default function AdminUsers() {
                             </Button>
                           )}
                         </div>
+
+                        {/* Alert on Login section */}
+                        {!user.isAdmin && (
+                          <div className="mt-3 pt-2 border-t border-border/50 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-xs font-semibold text-muted-foreground">Alert on Login</span>
+                              <Button
+                                size="sm"
+                                variant={user.alertEnabled ? "secondary" : "outline"}
+                                className={`h-7 text-xs ml-auto ${user.alertEnabled ? "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30" : ""}`}
+                                disabled={togglingAlertFor === user._id}
+                                onClick={() => toggleAlertMutation.mutate({ userId: user._id, enabled: !user.alertEnabled })}
+                                data-testid={`button-toggle-alert-${user._id}`}
+                              >
+                                {togglingAlertFor === user._id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : user.alertEnabled ? (
+                                  <><Bell className="h-3 w-3 mr-1" />On</>
+                                ) : (
+                                  <><BellOff className="h-3 w-3 mr-1" />Off</>
+                                )}
+                              </Button>
+                            </div>
+
+                            <div className="space-y-2">
+                              <textarea
+                                rows={2}
+                                placeholder="Type the message the user will see..."
+                                value={alertMessageEdits[user._id] ?? (user.alertMessage || "")}
+                                onChange={(e) =>
+                                  setAlertMessageEdits((prev) => ({ ...prev, [user._id]: e.target.value }))
+                                }
+                                className="w-full text-xs rounded-md border border-input bg-background px-2.5 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                                data-testid={`input-alert-message-${user._id}`}
+                              />
+
+                              {user.alertDeadline && (
+                                <div className={`flex items-center justify-between rounded-md px-2.5 py-1.5 text-[11px] ${user.alertDeadline <= Date.now() ? "bg-red-500/10 text-red-600" : "bg-yellow-500/10 text-yellow-700"}`}>
+                                  <span>
+                                    {user.alertDeadline <= Date.now()
+                                      ? "Countdown expired — account locked"
+                                      : `Locks at ${new Date(user.alertDeadline).toLocaleString()}`}
+                                  </span>
+                                  <button
+                                    className="ml-2 underline text-[10px] opacity-70 hover:opacity-100"
+                                    onClick={() => clearDeadlineMutation.mutate(user._id)}
+                                    data-testid={`button-clear-deadline-${user._id}`}
+                                  >
+                                    Clear
+                                  </button>
+                                </div>
+                              )}
+
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] text-muted-foreground whitespace-nowrap">Lock in:</span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={alertDurationValueEdits[user._id] ?? 1}
+                                  onChange={(e) =>
+                                    setAlertDurationValueEdits((prev) => ({
+                                      ...prev,
+                                      [user._id]: Math.max(1, parseInt(e.target.value) || 1),
+                                    }))
+                                  }
+                                  className="w-14 text-xs rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring text-center"
+                                  data-testid={`input-alert-duration-${user._id}`}
+                                />
+                                <select
+                                  value={alertDurationUnitEdits[user._id] ?? "hours"}
+                                  onChange={(e) =>
+                                    setAlertDurationUnitEdits((prev) => ({ ...prev, [user._id]: e.target.value }))
+                                  }
+                                  className="text-xs rounded-md border border-input bg-background px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-ring"
+                                  data-testid={`select-alert-unit-${user._id}`}
+                                >
+                                  <option value="minutes">min</option>
+                                  <option value="hours">hrs</option>
+                                  <option value="days">days</option>
+                                </select>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs ml-auto"
+                                  disabled={savingAlertFor === user._id}
+                                  onClick={() => {
+                                    const value = alertDurationValueEdits[user._id] ?? 1;
+                                    const unit = alertDurationUnitEdits[user._id] ?? "hours";
+                                    const multipliers: Record<string, number> = {
+                                      minutes: 60_000,
+                                      hours: 3_600_000,
+                                      days: 86_400_000,
+                                    };
+                                    const deadline = Date.now() + value * multipliers[unit];
+                                    saveAlertSettingsMutation.mutate({
+                                      userId: user._id,
+                                      alertMessage: alertMessageEdits[user._id] ?? (user.alertMessage || ""),
+                                      alertDeadline: deadline,
+                                    });
+                                  }}
+                                  data-testid={`button-save-alert-${user._id}`}
+                                >
+                                  {savingAlertFor === user._id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : "Set"}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

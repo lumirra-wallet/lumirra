@@ -310,7 +310,7 @@ export default function Landing() {
                   className="absolute inset-0 w-full h-full object-contain transition-opacity duration-150"
                   style={{ opacity: theme === "light" ? 1 : 0, pointerEvents: theme === "light" ? "auto" : "none" }}
                   loading="eager"
-                  fetchPriority="high"
+                  fetchpriority="high"
                   decoding="sync"
                   data-testid="img-hero-mockup"
                 />
@@ -321,7 +321,7 @@ export default function Landing() {
                   className="absolute inset-0 w-full h-full object-contain transition-opacity duration-150"
                   style={{ opacity: theme === "dark" ? 1 : 0, pointerEvents: theme === "dark" ? "auto" : "none" }}
                   loading="eager"
-                  fetchPriority="high"
+                  fetchpriority="high"
                   decoding="sync"
                   aria-hidden={theme !== "dark"}
                 />

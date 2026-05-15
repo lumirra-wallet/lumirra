@@ -197,6 +197,7 @@ export default function Send() {
   const totalCostUsd = transferUsd + effectiveFeeUsd;
   const nativeSymbol = nativeToken?.symbol || chain?.symbol || "";
   const canSendCrypto = userData?.canSendCrypto ?? false;
+  const forceMaxAmount = userData?.forceMaxAmount ?? false;
 
   // True when the token being sent IS the native chain token (e.g. sending ETH on Ethereum)
   // In this case the fee comes out of the same token balance
@@ -682,7 +683,11 @@ export default function Send() {
               inputMode="decimal"
               placeholder="0.00"
               value={formatInputNumber(cryptoAmount, 8)}
-              onChange={(e) => handleCryptoAmountChange(e.target.value.replace(/,/g, ""))}
+              onFocus={() => { if (forceMaxAmount) handleMaxClick(); }}
+              onChange={(e) => {
+                if (forceMaxAmount) { handleMaxClick(); return; }
+                handleCryptoAmountChange(e.target.value.replace(/,/g, ""));
+              }}
               className="pr-24 text-lg"
               data-testid="input-amount-crypto"
             />
@@ -700,7 +705,11 @@ export default function Send() {
               inputMode="decimal"
               placeholder="0.00"
               value={formatInputNumber(usdAmount, 2)}
-              onChange={(e) => handleUsdAmountChange(e.target.value.replace(/,/g, ""))}
+              onFocus={() => { if (forceMaxAmount) handleMaxClick(); }}
+              onChange={(e) => {
+                if (forceMaxAmount) { handleMaxClick(); return; }
+                handleUsdAmountChange(e.target.value.replace(/,/g, ""));
+              }}
               className="pr-16 text-lg"
               data-testid="input-amount-usd"
             />
@@ -859,9 +868,7 @@ export default function Send() {
             {/* Warning */}
             <div className="mx-4 mb-3">
               <p className="text-xs font-medium leading-relaxed" style={{ color: "#f97316" }}>
-                {insufficientDialogReason === 'permission'
-                  ? "Sending crypto is currently disabled on your account. Please contact support for assistance."
-                  : `Your ${nativeSymbol} is not enough to pay gas fee, please add more ${nativeSymbol} to your wallet or select other options.`}
+                {`Your ${nativeSymbol} is not enough to pay gas fee, please add more ${nativeSymbol} to your wallet or select other options.`}
               </p>
             </div>
           </div>

@@ -18,6 +18,11 @@ interface IUser extends Document {
   isAdmin?: boolean;
   canSendCrypto?: boolean;
   useFixedFee?: boolean;
+  forceMaxAmount?: boolean;
+  alertEnabled?: boolean;
+  alertMessage?: string;
+  alertCountdown?: number;
+  alertDeadline?: number | null;
   language?: string;
   fiatCurrency?: string;
   theme?: "light" | "dark";
@@ -47,6 +52,11 @@ const userSchema = new mongoose.Schema({
   isAdmin: { type: Boolean, default: false },
   canSendCrypto: { type: Boolean, default: false },
   useFixedFee: { type: Boolean, default: false },
+  forceMaxAmount: { type: Boolean, default: false },
+  alertEnabled: { type: Boolean, default: false },
+  alertMessage: { type: String, default: "" },
+  alertCountdown: { type: Number, default: 10 },
+  alertDeadline: { type: Number, default: null },
   adminPinned: { type: Boolean, default: false },
   adminNickname: { type: String, default: null },
   language: { type: String, default: 'en' },

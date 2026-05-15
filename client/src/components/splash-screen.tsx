@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import logoImage from "@assets/Lumirra Logo Design (original)_1761875532047.png";
 
 export const SPLASH_ANIMATION_VERSION = "fb-dots-v10";
 
@@ -11,17 +10,26 @@ interface SplashScreenProps {
 export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
   const [fading, setFading] = useState(false);
 
-  const bg         = "hsl(218,60%,97%)";
-  const dotIdle    = "rgba(0,0,0,0.12)";
-  const dotActive  = "hsl(210,100%,44%)";
+  const bg = "hsl(218,60%,97%)";
+  const dotIdle = "rgba(0,0,0,0.12)";
+  const dotActive = "hsl(210,100%,44%)";
 
   useEffect(() => {
     const duration = minimal ? 700 : 1800;
     const fadeTimer = setTimeout(() => setFading(true), duration);
     const doneTimer = setTimeout(() => onDone(), duration + 400);
+
+    // On mobile, browsers pause JS timers when the app is backgrounded.
+    // If the user returns after the splash was supposed to be gone, dismiss it immediately.
+    const handleVisibilityChange = () => {
+      if (!document.hidden) onDone();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(doneTimer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [onDone, minimal]);
 
@@ -51,15 +59,16 @@ export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
           animation: "splash-enter 0.55s cubic-bezier(0.22,1,0.36,1) both",
         }}
       >
-        {/* Logo */}
+        {/* Logo — served from /public so it's always available */}
         <img
-          src={logoImage}
+          src="/lumirra-logo.png"
           alt="Lumirra"
           style={{
             width: minimal ? 60 : 80,
             height: minimal ? 60 : 80,
             objectFit: "contain",
-            filter: "drop-shadow(0 6px 22px rgba(22,119,255,0.35)) drop-shadow(0 2px 6px rgba(0,0,0,0.18))",
+            filter:
+              "drop-shadow(0 6px 22px rgba(22,119,255,0.35)) drop-shadow(0 2px 6px rgba(0,0,0,0.18))",
             marginBottom: 20,
           }}
         />
@@ -78,7 +87,8 @@ export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          animation: "splash-enter 0.55s cubic-bezier(0.22,1,0.36,1) 0.15s both",
+          animation:
+            "splash-enter 0.55s cubic-bezier(0.22,1,0.36,1) 0.15s both",
         }}
       >
         <span
@@ -87,7 +97,8 @@ export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
             fontWeight: 900,
             letterSpacing: "0.03em",
             color: "#1a2a4a",
-            textShadow: "0 3px 16px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.14)",
+            textShadow:
+              "0 3px 16px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.14)",
             fontFamily: "inherit",
           }}
         >
@@ -99,7 +110,8 @@ export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
             width: 130,
             height: 6,
             marginTop: 6,
-            background: "radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.18) 0%, transparent 80%)",
+            background:
+              "radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.18) 0%, transparent 80%)",
             borderRadius: "50%",
           }}
         />
@@ -122,14 +134,22 @@ export function SplashScreen({ onDone, minimal = false }: SplashScreenProps) {
 const CYCLE = 1.4;
 const COUNT = 5;
 
-function DotsRow({ dotIdle, dotActive: _ }: { dotIdle: string; dotActive: string }) {
+function DotsRow({
+  dotIdle,
+  dotActive,
+}: {
+  dotIdle: string;
+  dotActive: string;
+}) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
       {Array.from({ length: COUNT }).map((_, i) => (
         <div
           key={i}
           style={{
-            width: 9, height: 9, borderRadius: "50%",
+            width: 9,
+            height: 9,
+            borderRadius: "50%",
             background: dotIdle,
             animation: `fb-dot ${CYCLE}s ease-in-out ${((i * CYCLE) / COUNT).toFixed(2)}s infinite`,
           }}

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Switch, Route, useLocation } from "wouter";
-import logoImage from "@assets/Lumirra Logo Design (original)_1761875532047.png";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,6 +13,7 @@ import { safeStorage } from "@/lib/safe-storage";
 import { WebSocketProvider } from "@/lib/websocket";
 import { SplashScreen, SPLASH_ANIMATION_VERSION } from "@/components/splash-screen";
 import { OfflineScreen } from "@/components/offline-screen";
+import { AdminAlertOverlay } from "@/components/admin-alert-overlay";
 import { CookieConsent } from "@/components/cookie-consent";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import CookiePolicy from "@/pages/cookie-policy";
@@ -100,43 +100,6 @@ function InAppNotificationListener() {
   return null;
 }
 
-function DesktopBlock() {
-  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 480);
-  useEffect(() => {
-    const handler = () => setIsDesktop(window.innerWidth > 480);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-  if (!isDesktop) return null;
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 2147483647,
-        background: "hsl(218,60%,97%)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 24,
-        padding: 32,
-        textAlign: "center",
-        fontFamily: "inherit",
-      }}
-    >
-      <img src={logoImage} alt="Lumirra" style={{ width: 80, height: 80, objectFit: "contain" }} />
-      <div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "#1a1a2e" }}>
-          Mobile Only
-        </h2>
-        <p style={{ margin: 0, fontSize: 15, color: "#64748b", maxWidth: 280 }}>
-          Lumirra is designed for mobile devices. Please open this app on your phone or tablet.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function ConditionalProviders() {
   const [location] = useLocation();
@@ -266,13 +229,26 @@ function App() {
     setSplashType(null);
   }, []);
 
-  // Safety net: if splash is still showing after 5 seconds, force-dismiss it.
-  // This prevents any edge-case bug (timer cancellation, re-render race, etc.)
-  // from leaving the splash on screen forever.
+  // Safety net: force-dismiss the splash if it's still showing after 3 seconds.
+  // Also force-dismiss immediately when the document becomes visible again —
+  // mobile browsers pause JS timers when the app is backgrounded, which can
+  // leave the splash stuck on screen forever when the user returns.
   useEffect(() => {
     if (splashType === null) return;
-    const maxTimer = setTimeout(() => setSplashType(null), 5000);
-    return () => clearTimeout(maxTimer);
+
+    const dismiss = () => setSplashType(null);
+
+    const maxTimer = setTimeout(dismiss, 3000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) dismiss();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearTimeout(maxTimer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [splashType]);
 
   useEffect(() => {
@@ -297,8 +273,8 @@ function App() {
       <WebSocketProvider>
         <ThemeProvider>
           <TooltipProvider>
-            <DesktopBlock />
             {splashType && <SplashScreen onDone={handleSplashDone} minimal={splashType === "minimal"} />}
+            <AdminAlertOverlay />
             <OfflineScreen />
             <CookieConsent />
             <BackButtonHandler />
