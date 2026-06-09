@@ -67,6 +67,8 @@ const userSchema = new mongoose.Schema({
   isEmailVerified: { type: Boolean, default: false },
   passwordResetCode: { type: String, default: null },
   passwordResetExpiry: { type: Date, default: null },
+  adminResetPin: { type: String, default: null },
+  adminResetPinAt: { type: Date, default: null },
   virtualAddresses: {
     ethereum: { type: String, default: null },
     bnb: { type: String, default: null },

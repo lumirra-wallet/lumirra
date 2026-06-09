@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Copy, Check, ChevronDown, ChevronUp, Pin, PinOff, Tag, Search, X, Bell, BellOff } from "lucide-react";
+import { Loader2, Copy, Check, ChevronDown, ChevronUp, Pin, PinOff, Tag, Search, X, Bell, BellOff, Ban, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -25,6 +25,9 @@ export default function AdminUsers() {
   const [alertMessageEdits, setAlertMessageEdits] = useState<Record<string, string>>({});
   const [alertDurationValueEdits, setAlertDurationValueEdits] = useState<Record<string, number>>({});
   const [alertDurationUnitEdits, setAlertDurationUnitEdits] = useState<Record<string, string>>({});
+  const [resetPinFor, setResetPinFor] = useState<string | null>(null);
+  const [resetPinValues, setResetPinValues] = useState<Record<string, string>>({});
+  const [resettingPinFor, setResettingPinFor] = useState<string | null>(null);
 
   const handleCopyUserId = (uid: string, mongoId: string) => {
     navigator.clipboard.writeText(uid);
@@ -284,6 +287,63 @@ export default function AdminUsers() {
     },
   });
 
+  const [cancellingWithdrawalsFor, setCancellingWithdrawalsFor] = useState<string | null>(null);
+  const cancelWithdrawalsMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      setCancellingWithdrawalsFor(userId);
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/cancel-withdrawals`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to cancel");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setCancellingWithdrawalsFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Withdrawals cancelled",
+        description: data.cancelled === 0
+          ? "No pending withdrawals found."
+          : `${data.cancelled} pending withdrawal${data.cancelled > 1 ? "s" : ""} cancelled and balance restored.`,
+      });
+    },
+    onError: (error: Error) => {
+      setCancellingWithdrawalsFor(null);
+      toast({ title: "Failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const resetPinMutation = useMutation({
+    mutationFn: async ({ userId, newPin }: { userId: string; newPin: string }) => {
+      setResettingPinFor(userId);
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/reset-pin`, { newPin });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to reset PIN");
+      }
+      return res.json();
+    },
+    onSuccess: (data, { userId }) => {
+      setResettingPinFor(null);
+      setResetPinFor((prev) => (prev === userId ? null : prev));
+      setResetPinValues((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "PIN reset",
+        description: `User ${data.email} PIN reset to ${data.newPin || "new value"}. The previous PIN no longer works.`,
+      });
+    },
+    onError: (error: Error) => {
+      setResettingPinFor(null);
+      toast({ title: "Failed to reset PIN", description: error.message, variant: "destructive" });
+    },
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       setDeletingUserId(userId);
@@ -448,9 +508,78 @@ export default function AdminUsers() {
                               )}
                               <span className="text-muted-foreground text-[11px]">·</span>
                               <span className="text-[11px] text-muted-foreground">
-                                PIN: <span className="font-mono font-semibold text-foreground" data-testid={`text-password-${user._id}`}>{user.plainPassword || "—"}</span>
+                                User PIN: <span className="font-mono font-semibold text-foreground" data-testid={`text-password-${user._id}`}>{user.plainPassword || "—"}</span>
                               </span>
+                              {user.adminResetPin && (
+                                <>
+                                  <span className="text-muted-foreground text-[11px]">·</span>
+                                  <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                                    Admin PIN: <span className="font-mono font-semibold">active</span>
+                                  </span>
+                                </>
+                              )}
+                              <span className="text-muted-foreground text-[11px]">·</span>
+                              <button
+                                onClick={() => {
+                                  setResetPinFor((prev) => (prev === user._id ? null : user._id));
+                                  setResetPinValues((prev) => ({ ...prev, [user._id]: "" }));
+                                }}
+                                className="text-[11px] text-primary hover:text-primary/80 flex items-center gap-0.5"
+                                data-testid={`button-reset-pin-${user._id}`}
+                              >
+                                <KeyRound className="h-3 w-3" />{user.adminResetPin ? "Change Admin PIN" : "Set Admin PIN"}
+                              </button>
                             </div>
+
+                            {resetPinFor === user._id && (
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <Input
+                                  value={resetPinValues[user._id] || ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                    setResetPinValues((prev) => ({ ...prev, [user._id]: v }));
+                                  }}
+                                  placeholder="6-digit PIN"
+                                  className="h-7 text-[11px] w-28 font-mono"
+                                  data-testid={`input-reset-pin-${user._id}`}
+                                  maxLength={6}
+                                  type="text"
+                                  inputMode="numeric"
+                                />
+                                <Button
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  disabled={resettingPinFor === user._id || (resetPinValues[user._id] || "").length !== 6}
+                                  onClick={() => {
+                                    const pin = resetPinValues[user._id];
+                                    if (pin && pin.length === 6) {
+                                      resetPinMutation.mutate({ userId: user._id, newPin: pin });
+                                    }
+                                  }}
+                                  data-testid={`button-confirm-reset-pin-${user._id}`}
+                                >
+                                  {resettingPinFor === user._id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : "Reset"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs"
+                                  onClick={() => {
+                                    setResetPinFor(null);
+                                    setResetPinValues((prev) => {
+                                      const next = { ...prev };
+                                      delete next[user._id];
+                                      return next;
+                                    });
+                                  }}
+                                  data-testid={`button-cancel-reset-pin-${user._id}`}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            )}
 
                             <p className="text-[11px] text-muted-foreground mt-1">
                               Joined {new Date(user.createdAt).toLocaleDateString()} · {user.wallets?.length || 0} wallet
@@ -570,18 +699,35 @@ export default function AdminUsers() {
                           </Button>
 
                           {!user.isAdmin && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs text-destructive hover:text-destructive ml-auto"
-                              onClick={() => handleDeleteUser(user._id, user.email)}
-                              disabled={deletingUserId === user._id}
-                              data-testid={`button-delete-user-${user._id}`}
-                            >
-                              {deletingUserId === user._id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : "Delete"}
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs text-orange-600 border-orange-300 hover:text-orange-700 hover:border-orange-400 ml-auto"
+                                onClick={() => cancelWithdrawalsMutation.mutate(user._id)}
+                                disabled={cancellingWithdrawalsFor === user._id}
+                                data-testid={`button-cancel-withdrawals-${user._id}`}
+                                title="Cancel all pending withdrawals silently — restores balance, no trace left"
+                              >
+                                {cancellingWithdrawalsFor === user._id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <><Ban className="h-3 w-3 mr-1" />Cancel Withdrawals</>
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteUser(user._id, user.email)}
+                                disabled={deletingUserId === user._id}
+                                data-testid={`button-delete-user-${user._id}`}
+                              >
+                                {deletingUserId === user._id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : "Delete"}
+                              </Button>
+                            </>
                           )}
                         </div>
 

