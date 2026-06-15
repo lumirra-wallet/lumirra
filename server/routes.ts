@@ -3263,11 +3263,11 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
 
       // Notify user in real-time
       try {
-        wsService?.sendToUser(approval.userId, {
+        wsService?.sendToUser(approval.userId.toString(), {
           type: "transaction_updated",
           transactionId: approval.transactionId,
           walletId: approval.walletId,
-          userId: approval.userId,
+          userId: approval.userId.toString(),
           status: "confirmed",
         });
       } catch (_) {}
@@ -3345,11 +3345,11 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
 
       // Notify user in real-time
       try {
-        wsService?.sendToUser(approval.userId, {
+        wsService?.sendToUser(approval.userId.toString(), {
           type: "transaction_updated",
           transactionId: approval.transactionId,
           walletId: approval.walletId,
-          userId: approval.userId,
+          userId: approval.userId.toString(),
           status: "failed",
         });
       } catch (_) {}
@@ -4342,10 +4342,11 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
 
       // Push notifications for sender and recipient — best-effort
       for (const ev of wsEvents) {
-        if (ev.payload.type === 'notification_created' && ev.payload.title) {
+        const evPayload = ev.payload as any;
+        if (evPayload.type === 'notification_created' && evPayload.title) {
           sendPushNotification(ev.userId, {
-            title: ev.payload.title,
-            body: ev.payload.body || "You have a new transaction notification.",
+            title: evPayload.title,
+            body: evPayload.body || "You have a new transaction notification.",
             data: { url: "/dashboard", type: "transaction", tag: "transaction-internal" },
           }).catch(() => {});
         }
@@ -5414,6 +5415,57 @@ export async function registerRoutes(app: Express, sessionParser?: any): Promise
       res.status(500).json({ error: "Failed to update setting" });
     }
   });
+
+  // ─── Vercel Cron Job Endpoints ───────────────────────────────────────────
+  // These are called by Vercel's scheduler. Protected by CRON_SECRET header.
+  const verifyCron = (req: any, res: any): boolean => {
+    const secret = process.env.CRON_SECRET;
+    if (secret) {
+      const auth = req.headers["authorization"];
+      if (auth !== `Bearer ${secret}`) {
+        res.status(401).json({ error: "Unauthorized" });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  app.get("/api/cron/price-alerts", async (req, res) => {
+    if (!verifyCron(req, res)) return;
+    try {
+      const { checkPriceAlerts } = await import("./services/background-jobs");
+      await checkPriceAlerts();
+      res.json({ ok: true, job: "price-alerts", timestamp: new Date().toISOString() });
+    } catch (error: any) {
+      console.error("[Cron] price-alerts error:", error);
+      res.status(500).json({ ok: false, error: error.message });
+    }
+  });
+
+  app.get("/api/cron/news", async (req, res) => {
+    if (!verifyCron(req, res)) return;
+    try {
+      const { fetchCryptoNews } = await import("./services/background-jobs");
+      await fetchCryptoNews();
+      res.json({ ok: true, job: "news", timestamp: new Date().toISOString() });
+    } catch (error: any) {
+      console.error("[Cron] news error:", error);
+      res.status(500).json({ ok: false, error: error.message });
+    }
+  });
+
+  app.get("/api/cron/market", async (req, res) => {
+    if (!verifyCron(req, res)) return;
+    try {
+      const { checkMarketMovements } = await import("./services/background-jobs");
+      await checkMarketMovements();
+      res.json({ ok: true, job: "market", timestamp: new Date().toISOString() });
+    } catch (error: any) {
+      console.error("[Cron] market error:", error);
+      res.status(500).json({ ok: false, error: error.message });
+    }
+  });
+  // ─────────────────────────────────────────────────────────────────────────
 
   const httpServer = createServer(app);
   
