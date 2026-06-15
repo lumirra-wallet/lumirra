@@ -13,6 +13,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     environment:
@@ -28,9 +31,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
         env:
-          MONGOMS_DISABLE_POSTINSTALL: 1
+          MONGOMS_DISABLE_POSTINSTALL: "1"
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
       - name: Build frontend
         run: npx vite build
@@ -40,10 +44,10 @@ jobs:
 
       - name: Verify build output
         run: |
-          echo "Build contents:"
+          echo "=== dist/public contents ==="
           ls -la dist/public/
-          echo "index.html exists:"
-          test -f dist/public/index.html && echo "YES" || echo "NO - BUILD FAILED"
+          test -f dist/public/index.html || { echo "ERROR: dist/public/index.html not found!"; exit 1; }
+          echo "SUCCESS: index.html found"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
