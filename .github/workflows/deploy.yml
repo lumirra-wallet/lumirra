@@ -22,6 +22,8 @@ jobs:
 
       - name: Build frontend
         run: npx vite build
+        env:
+          VITE_BASE_PATH: /lumirra/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
